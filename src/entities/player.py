@@ -1,5 +1,6 @@
 import pygame
 from src.entities.entity import Entity
+from src.managers.inventory_system import InventorySystem
 
 class Player(Entity):
     def __init__(self, x, y, stats):
@@ -11,6 +12,11 @@ class Player(Entity):
         
         # Personalizar el color del cuadrado del jugador para diferenciarlo de un enemigo
         self.image.fill((30, 144, 255)) # Azul brillante (Dodger Blue)
+        
+        # Inyectar el componente de inventario leyendo la capacidad desde el JSON
+        slots_capacity = stats.get("inventory_size", 8)
+        self.inventory = InventorySystem(total_slots=slots_capacity)
+
 
     def input(self):
         """Escucha el teclado y altera la dirección del vector de movimiento"""

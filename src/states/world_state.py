@@ -49,6 +49,19 @@ class WorldState(BaseState):
                 if event.key == pygame.K_ESCAPE:
                     self.manager.change_state("menu")
 
+                # SIMULACIÓN DE RECOLECCIÓN (Prueba del Inventario)
+                # Tecla 'E': Simula recoger 10 unidades de madera ("wood")
+                if event.key == pygame.K_e:
+                    print("Intentando recoger 10 de Madera...")
+                    self.player.inventory.add_item(item_id="wood", quantity=10, max_stack=20)
+                    self.player.inventory.debug_display() # Ver estado actual en consola
+                    
+                # Tecla 'R': Simula recoger 5 unidades de piedra ("stone")
+                if event.key == pygame.K_r:
+                    print("Intentando recoger 5 de Piedra...")
+                    self.player.inventory.add_item(item_id="stone", quantity=5, max_stack=10)
+                    self.player.inventory.debug_display()
+
     def update(self, dt):
         # Actualizar la lógica de todos los sprites dentro del mundo (incluye al jugador)
         self.visible_sprites.update(dt)
