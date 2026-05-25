@@ -5,6 +5,7 @@ from src.states.base_state import BaseState
 from src.entities.player import Player
 from src.entities.resources import Resource
 from src.core.camera import CameraGroup
+from src.managers.game_clock import GameClock
 
 class WorldState(BaseState):
     def __init__(self, state_manager):
@@ -24,6 +25,9 @@ class WorldState(BaseState):
         
         # Generar el mapa con recursos reales en lugar de bloques de prueba
         self.generate_resources()
+
+        # Instanciar el reloj del mundo
+        self.clock = GameClock(time_scale=60.0) # 1 seg real = 1 min juego
 
     def load_entities_data(self):
         try:
@@ -89,9 +93,22 @@ class WorldState(BaseState):
                 break # Solo golpear un recurso a la vez
 
     def update(self, dt):
+        # Actualizar el reloj global
+        self.clock.update(dt)
         # El jugador necesita saber dónde están los recursos para no atravesarlos
         self.player.update(dt, self.resource_sprites)
 
     def draw(self, surface):
         surface.fill(self.color_grass)
         self.visible_sprites.custom_draw(self.player)
+
+        # TODO: (PROVISIONAL) Dibujar el reloj digital en la esquina superior izquierda
+        font = pygame.font.SysFont("Arial", 24, bold=True)
+        time_text = font.render(self.clock.get_time_string(), True, (255, 255, 255))
+
+        # Dibujar un pequeño fondo negro detrás del texto para que se lea bien
+        bg_rect = pygame.Rect(10, 10, time_text.get_width() + 10, 35)
+        pygame.draw.rect(surface, (0, 0, 0, 150), bg_rect)
+
+        # Estampar el texto
+        surface.blit(time_text, (15, 15))
