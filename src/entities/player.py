@@ -38,7 +38,8 @@ class Player(Entity):
         elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.direction.x = 1
 
-    def update(self, dt):
-        """Actualización frame a frame del jugador"""
+    def update(self, dt, obstacle_sprites):
+        """Actualización frame a frame del jugador con conocimiento de obstáculos"""
         self.input()
-        self.move(dt)
+        # Le pasamos los obstáculos al método move de la clase madre (Entity)
+        self.move(dt, obstacle_sprites)

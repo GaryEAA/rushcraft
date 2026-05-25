@@ -22,6 +22,12 @@ class Resource(pygame.sprite.Sprite):
             
         self.rect = self.image.get_rect(topleft=(x, y))
 
+        # NUEVO: Hitbox física del obstáculo (reducida para permitir perspectiva)
+        if self.type == "tree":
+            self.hitbox = self.rect.copy().inflate(-20, -40) # Solo el centro inferior es sólido
+        else:
+            self.hitbox = self.rect.copy().inflate(-6, -6)   # La roca es casi sólida por complet
+
     def hit(self, damage=10):
         """Disminuye la vida del recurso cuando el jugador lo golpea"""
         self.health -= damage

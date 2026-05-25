@@ -89,7 +89,8 @@ class WorldState(BaseState):
                 break # Solo golpear un recurso a la vez
 
     def update(self, dt):
-        self.visible_sprites.update(dt)
+        # El jugador necesita saber dónde están los recursos para no atravesarlos
+        self.player.update(dt, self.resource_sprites)
 
     def draw(self, surface):
         surface.fill(self.color_grass)
