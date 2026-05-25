@@ -29,13 +29,25 @@ class Game:
         # 4. Inicializar el Gestor de Estados del núcleo
         self.state_manager = StateManager()
 
+        # Importar y registrar el estado del Menú Principal
+        from src.states.menu_state import MenuState
+        
+        # Instanciar el menú pasándole una referencia de este mismo manager
+        menu_state_instance = MenuState(self.state_manager)
+        
+        # Registrar el estado en la máquina con el identificador estandarizado "menu"
+        self.state_manager.add_state("menu", menu_state_instance)
+        
+        # Definir que el juego debe arrancar mostrando esta pantalla de inmediato
+        self.state_manager.change_state("menu")
+
     def load_settings(self):
         """Lee los parámetros de video iniciales desde el JSON maestro"""
         try:
             with open("data/settings.json", "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            print(f"⚠️ No se pudo cargar settings.json ({e}). Usando valores por defecto.")
+            print(f"No se pudo cargar settings.json ({e}). Usando valores por defecto.")
             return {"screen_width": 800, "screen_height": 600, "fps": 60}
 
     def run(self):
