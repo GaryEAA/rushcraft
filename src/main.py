@@ -37,6 +37,11 @@ class Game:
         
         # Registrar el estado en la máquina con el identificador estandarizado "menu"
         self.state_manager.add_state("menu", menu_state_instance)
+
+        # Importar, instanciar y registrar el estado del Mundo de Juego
+        from src.states.world_state import WorldState
+        world_state_instance = WorldState(self.state_manager)
+        self.state_manager.add_state("world", world_state_instance)
         
         # Definir que el juego debe arrancar mostrando esta pantalla de inmediato
         self.state_manager.change_state("menu")
