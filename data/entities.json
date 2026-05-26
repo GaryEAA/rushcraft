@@ -8,6 +8,23 @@
     "attack_range": 60,
     "damage": 10
   },
-  "enemies": {},
+  "enemies": {
+    "slime": {
+      "name": "Slime Oscuro",
+      "max_health": 30,
+      "speed": 90,
+      "damage": 10,
+      "color": [138, 43, 226],
+      "exp_yield": 15
+    },
+    "zombie": {
+      "name": "Zombi de la Noche",
+      "max_health": 60,
+      "speed": 60,
+      "damage": 20,
+      "color": [46, 139, 87],
+      "exp_yield": 30
+    }
+  },
   "npcs": {}
 }

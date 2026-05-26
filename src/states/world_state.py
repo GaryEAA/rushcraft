@@ -4,6 +4,7 @@ import random
 from src.states.base_state import BaseState
 from src.entities.player import Player
 from src.entities.resources import Resource
+from src.entities.enemy import Enemy
 from src.core.camera import CameraGroup
 from src.managers.game_clock import GameClock
 from src.effects.night_filter import NightFilter
@@ -25,11 +26,17 @@ class WorldState(BaseState):
         self.visible_sprites = CameraGroup()
         self.resource_sprites = pygame.sprite.Group() 
         
+        # Grupo lógico exclusivo para gestionar enemigos separados de los recursos
+        self.enemy_sprites = pygame.sprite.Group()
+        
         # Añadir al jugador al render
         self.visible_sprites.add(self.player)
         
         # Generar el mapa con recursos reales
         self.generate_resources()
+
+        # Spawner de prueba para verificar que los enemigos funcionen
+        self.spawn_test_enemies()
 
         # Instanciar sistemas secundarios
         self.clock = GameClock(time_scale=60.0) 
@@ -65,6 +72,24 @@ class WorldState(BaseState):
             rock = Resource(x, y, resource_type="rock", health=50, item_yield="stone")
             self.visible_sprites.add(rock)
             self.resource_sprites.add(rock)
+
+    # Genera monstruos leyendo las estadísticas dinámicas del JSON
+    def spawn_test_enemies(self):
+        """Genera un par de enemigos de prueba en el mapa usando los datos del JSON"""
+        enemies_config = self.entities_data.get("enemies", {})
+        
+        # Validar que existan las llaves en el JSON antes de intentar spawnear
+        if "slime" in enemies_config:
+            # Creamos un slime cerca de la zona inicial
+            slime = Enemy(200, 200, "slime", enemies_config["slime"])
+            self.visible_sprites.add(slime) # Para que la cámara lo dibuje
+            self.enemy_sprites.add(slime)   # Para controlar su IA y colisiones
+            
+        if "zombie" in enemies_config:
+            # Creamos un zombie un poco más alejado
+            zombie = Enemy(600, 150, "zombie", enemies_config["zombie"])
+            self.visible_sprites.add(zombie)
+            self.enemy_sprites.add(zombie)
 
     def handle_events(self, events):
         for event in events:
@@ -135,6 +160,11 @@ class WorldState(BaseState):
         # Bloquear movimiento del jugador si alguna interfaz está desplegada
         if not self.crafting_menu.is_open and not self.inventory_screen.is_open:
             self.player.update(dt, self.resource_sprites)
+
+            # Actualizar la IA y movimiento de todos los enemigos en pantalla.
+            # Les pasamos los recursos como obstáculos y el rectángulo del jugador para que lo persigan.
+            for enemy in self.enemy_sprites:
+                enemy.update(dt, self.resource_sprites, self.player.rect)
 
         self.particle_manager.update(dt)
 
