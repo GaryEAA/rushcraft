@@ -6,6 +6,7 @@ from src.entities.player import Player
 from src.entities.resources import Resource
 from src.core.camera import CameraGroup
 from src.managers.game_clock import GameClock
+from src.effects.night_filter import NightFilter
 
 class WorldState(BaseState):
     def __init__(self, state_manager):
@@ -28,6 +29,9 @@ class WorldState(BaseState):
 
         # Instanciar el reloj del mundo
         self.clock = GameClock(time_scale=60.0) # 1 seg real = 1 min juego
+
+        # Instanciar el filtro con las dimensiones de la pantalla
+        self.night_filter = NightFilter(800, 600)
 
     def load_entities_data(self):
         try:
@@ -95,12 +99,18 @@ class WorldState(BaseState):
     def update(self, dt):
         # Actualizar el reloj global
         self.clock.update(dt)
+        # Actualizar la opacidad del filtro de noche
+        self.night_filter.update(self.clock.hour, self.clock.minute)
         # El jugador necesita saber dónde están los recursos para no atravesarlos
         self.player.update(dt, self.resource_sprites)
 
     def draw(self, surface):
+        # Dibujar el mundo y las entidades (Abajo de todo)
         surface.fill(self.color_grass)
         self.visible_sprites.custom_draw(self.player)
+
+        # Capa de oscuridad ambiental (Se aplica sobre el mundo)
+        self.night_filter.draw(surface)
 
         # TODO: Dibujar el reloj digital en la esquina superior izquierda
         font = pygame.font.SysFont("Arial", 24, bold=True)
