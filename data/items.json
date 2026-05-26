@@ -1,1 +1,25 @@
-{}
+{
+    "hand_damage": 2,
+    "materials": {
+        "wood": {
+            "multiplier": 1.0
+        },
+        "stone": {
+            "multiplier": 2.0
+        }
+    },
+    "tools": {
+        "axe": {
+            "base_damage": {
+                "tree": 15,
+                "rock": 1
+            }
+        },
+        "pickaxe": {
+            "base_damage": {
+                "tree": 1,
+                "rock": 25
+            }
+        }
+    }
+}

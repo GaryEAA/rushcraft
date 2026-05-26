@@ -5,8 +5,8 @@ from src.managers.inventory_system import InventorySystem
 class Player(Entity):
     def __init__(self, x, y, stats):
         """
-        Instancia al jugador leyendo sus estadísticas iniciales 
-        (las cuales vendrán desde nuestro entities.json)
+        Instancia al jugador leyendo sus estadísticas iniciales.
+        Ahora el jugador inicia con las manos 100% vacías.
         """
         super().__init__(x, y, stats["speed"], stats["max_health"])
         
@@ -17,7 +17,28 @@ class Player(Entity):
         slots_capacity = stats.get("inventory_size", 36) # Valor por defecto de 36 slots si no se especifica
         self.inventory = InventorySystem(total_slots=slots_capacity)
         self.active_slot = 0 # Guarda el índice del slot seleccionado (0 al 11)
+        
+        # Cargar datos dinámicos de los ítems
+        self.item_data = self.load_item_data()
 
+    # Carga de forma segura el archivo JSON de configuración de balanceo
+    def load_item_data(self):
+        """Carga la configuración de combate y materiales desde el JSON"""
+        import json
+        try:
+            with open("data/items.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error al cargar data/items.json: {e}. Usando backup de emergencia.")
+            # Respaldo en memoria por si el archivo JSON no existe o está mal formateado
+            return {
+                "hand_damage": 2,
+                "materials": {"wood": {"multiplier": 1.0}, "stone": {"multiplier": 2.0}},
+                "tools": {
+                    "axe": {"base_damage": {"tree": 15, "rock": 1}},
+                    "pickaxe": {"base_damage": {"tree": 1, "rock": 25}}
+                }
+            }
 
     def input(self):
         """Escucha el teclado y altera la dirección del vector de movimiento"""
@@ -66,33 +87,42 @@ class Player(Entity):
 
     def get_current_tool_damage(self, resource_type):
         """
-        Revisa el slot activo del inventario y devuelve el daño correspondiente
-        según el tipo de recurso que se esté golpeando.
+        Calcula el daño proporcional cruzando el tipo de herramienta, 
+        el recurso golpeado y el multiplicador del material desde el JSON.
         """
         # 1. Obtener los datos del slot que tenemos seleccionado en la mano
         active_item = self.inventory.slots[self.active_slot]
         
-        # 2. Si la mano está vacía (None), el daño de supervivencia es mínimo
+        # 2. Si la mano está vacía (None), devolvemos el daño base de puños desde el JSON
         if active_item is None:
-            return 2 
+            return self.item_data.get("hand_damage", 2)
             
-        item_id = active_item["item_id"]
+        item_id = active_item["item_id"] # Ejemplos: "axe", "pickaxe", "stone_axe", "stone_pickaxe"
         
-        # 3. LÓGICA DE EFICIENCIA DE HERRAMIENTAS
-        if item_id == "axe":
-            # El hacha es destructiva contra los árboles, pero mala contra las rocas
-            return 15 if resource_type == "tree" else 1
-        elif item_id == "pickaxe":
-            # El pico destroza las rocas, pero no sirve para talar madera
-            return 25 if resource_type == "rock" else 1
+        # 3. IDENTIFICAR EL MATERIAL Y TIPO DE HERRAMIENTA
+        # Si es una herramienta básica inicial ("axe" o "pickaxe")
+        if item_id == "axe" or item_id == "pickaxe":
+            material = "wood"       # Las iniciales cuentan como madera por defecto
+            tool_type = item_id     # El tipo es directamente el ID completo
+        elif "_" in item_id:
+            # Si tiene un guion bajo (como "stone_axe"), separamos el material del tipo
+            material, tool_type = item_id.split("_", 1)
+        else:
+            # Si tiene cualquier otra cosa en la mano (como el recurso "wood" o "stone"), hace daño mínimo
+            return self.item_data.get("hand_damage", 2)
+        
+        # 4. EXTRAER CONFIGURACIONES DEL DICCIONARIO JSON
+        materials_config = self.item_data.get("materials", {})
+        tools_config = self.item_data.get("tools", {})
 
-        # NUEVAS HERRAMIENTAS DE PIEDRA (CRAFTEABLES)
-        elif item_id == "stone_axe":
-            # Destruye árboles de un solo golpe (30 de daño)
-            return 30 if resource_type == "tree" else 2
-        elif item_id == "stone_pickaxe":
-            # Destruye rocas masivamente (50 de daño)
-            return 50 if resource_type == "rock" else 2
+        # 5. MATEMÁTICA PROPORCIONAL: Si existen en el JSON, calculamos dinámicamente
+        if tool_type in tools_config and material in materials_config:
+            base_damage_dict = tools_config[tool_type].get("base_damage", {})
+            base_damage = base_damage_dict.get(resource_type, 1) # Por defecto 1 de daño si el recurso no califica
+            multiplier = materials_config[material].get("multiplier", 1.0)
+            
+            # Retorna el daño final entero: Daño Base * Multiplicador
+            return int(base_damage * multiplier)
 
-        # 4. Si tienes cualquier otra cosa en la mano (madera, piedra, etc.), haces daño mínimo
-        return 2
+        # Si algo falla en la lectura, daño base de seguridad por defecto
+        return self.item_data.get("hand_damage", 2)

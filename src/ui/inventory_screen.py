@@ -6,7 +6,7 @@ class InventoryScreen:
         self.font = pygame.font.SysFont("Arial", 14)
         self.title_font = pygame.font.SysFont("Arial", 20, bold=True)
         self.debug_font = pygame.font.SysFont("Arial", 12, italic=True)
-        
+
         # Dimensiones de la ventana del inventario completo
         self.width = 600
         self.height = 300
@@ -38,10 +38,6 @@ class InventoryScreen:
         title_text = f"ALMACENAMIENTO: {level_names.get(inventory.backpack_level, 'Mochila')}"
         title_surface = self.title_font.render(title_text, True, (230, 200, 160))
         surface.blit(title_surface, (self.rect.x + 30, self.rect.y + 25))
-
-        # Texto explicativo de cambio de nivel
-        dev_text = self.font.render("[Debug: Presiona F1, F2 o F3 para alterar nivel de mochila]", True, (150, 150, 150))
-        surface.blit(dev_text, (self.rect.x + 25, self.rect.y + 48))
 
         # Texto explicativo para recordar la inyección de recursos masivos
         inject_text = self.debug_font.render("[Debug: Presiona 'I' en el mundo para inyectar +200 recursos de prueba]", True, (140, 170, 140))

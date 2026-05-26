@@ -68,7 +68,7 @@ class WorldState(BaseState):
 
     def handle_events(self, events):
         for event in events:
-            # Manejo de eventos de teclado
+            # 1. Manejo de eventos de teclado
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.manager.change_state("menu")
@@ -81,17 +81,6 @@ class WorldState(BaseState):
                 if event.key == pygame.K_e and not self.crafting_menu.is_open:
                     self.inventory_screen.toggle()
 
-                # Teclas Debug Funcionales (F1, F2, F3)
-                if event.key == pygame.K_F1:
-                    self.player.inventory.backpack_level = 1
-                    print("Debug: Sin Mochila Equipada (Solo Hotbar activa)")
-                if event.key == pygame.K_F2:
-                    self.player.inventory.backpack_level = 2
-                    print("Debug: Mochila Nivel 1 Desbloqueada (+12 Slots Extra)")
-                if event.key == pygame.K_F3:
-                    self.player.inventory.backpack_level = 3
-                    print("Debug: Mochila Nivel 2 Desbloqueada (+24 Slots Extra)")
-
                 # TODO: (DEBUG) Presiona 'I' para inyectar recursos masivos
                 if event.key == pygame.K_i:
                     # Añadimos 200 de madera y 200 de piedra de golpe
@@ -99,13 +88,19 @@ class WorldState(BaseState):
                     self.player.inventory.add_item("stone", 200)
                     print("Debug: Inyectados recursos de prueba en el inventario.")
 
-            # Detección de clics
+            # 2. Manejo de la rueda del ratón (Scroll)
+            if event.type == pygame.MOUSEWHEEL:
+                self.crafting_menu.handle_scroll(event)
+
+            # 3. Detección de clics (UNIFICADA)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: # Clic izquierdo
+                    # Prioridad 1: Si el menú de crafteo está abierto, procesamos sus botones
                     if self.crafting_menu.is_open:
                         self.crafting_menu.handle_click(event.pos, self.player.inventory)
+                    
+                    # Prioridad 2: Si los menús están cerrados, interactuamos con el mundo (recursos)
                     elif not self.inventory_screen.is_open: 
-                        # Solo golpeamos recursos si la mochila está CERRADA
                         self.check_resource_interaction(event.pos)
 
     def check_resource_interaction(self, mouse_pos):

@@ -1,1 +1,34 @@
-{}
+{
+    "recipes": {
+        "axe": {
+            "name": "Hacha de Madera",
+            "ingredients": {"wood": 10},
+            "result": {"item_id": "axe", "quantity": 1}
+        },
+        "pickaxe": {
+            "name": "Pico de Madera",
+            "ingredients": {"wood": 10},
+            "result": {"item_id": "pickaxe", "quantity": 1}
+        },
+        "stone_pickaxe": {
+            "name": "Pico de Piedra",
+            "ingredients": {"wood": 20, "stone": 15},
+            "result": {"item_id": "stone_pickaxe", "quantity": 1}
+        },
+        "stone_axe": {
+            "name": "Hacha de Piedra",
+            "ingredients": {"wood": 30, "stone": 10},
+            "result": {"item_id": "stone_axe", "quantity": 1}
+        },
+        "backpack_leather": {
+            "name": "Mochila de Montañero (+12 Slots)",
+            "ingredients": {"wood": 30, "stone": 15},
+            "result": {"item_id": "backpack_leather", "quantity": 1}
+        },
+        "backpack_expedition": {
+            "name": "Mochila de Expedición (+24 Slots)",
+            "ingredients": {"wood": 50, "stone": 40},
+            "result": {"item_id": "backpack_expedition", "quantity": 1}
+        }
+    }
+}

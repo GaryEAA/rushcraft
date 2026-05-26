@@ -13,11 +13,6 @@ class InventorySystem:
         # Inicializamos la lista completa con el espacio máximo físico
         self.slots = [None] * self.total_slots
 
-        # TODO: (PRUEBA) Herramientas iniciales de prueba para el desarrollo
-        self.slots[0] = {"item_id": "axe", "quantity": 1}   # Slot 1 (Índice 0) -> Hacha
-        self.slots[1] = {"item_id": "pickaxe", "quantity": 1} # Slot 2 (Índice 1) -> Pico
-
-
     def get_allowed_slots(self):
         """Calcula cuántos slots totales están disponibles según el nivel de la mochila"""
         if self.backpack_level == 1:
