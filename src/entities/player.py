@@ -14,7 +14,7 @@ class Player(Entity):
         self.image.fill((30, 144, 255)) # Azul brillante (Dodger Blue)
         
         # Inyectar el componente de inventario leyendo la capacidad desde el JSON
-        slots_capacity = stats.get("inventory_size", 8)
+        slots_capacity = stats.get("inventory_size", 36) # Valor por defecto de 36 slots si no se especifica
         self.inventory = InventorySystem(total_slots=slots_capacity)
         self.active_slot = 0 # Guarda el índice del slot seleccionado (0 al 11)
 

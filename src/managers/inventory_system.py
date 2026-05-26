@@ -1,26 +1,44 @@
 import pygame
 
 class InventorySystem:
-    def __init__(self, total_slots=8):
+    def __init__(self, total_slots=36):
         """
         Gestiona la lógica abstracta de almacenamiento de ítems.
         Cada slot será un diccionario: {"item_id": str, "quantity": int} o None si está vacío.
         """
-        self.total_slots = total_slots
+        # Forzamos a que el tamaño total físico en memoria sea siempre 36 
+        # para evitar crashes si la clase Player lo instanció con un valor menor por defecto.
+        self.total_slots = 36 
+        self.backpack_level = 1 # Empezamos en Nivel 1 (Solo Hotbar visible en el mundo)
+        # Inicializamos la lista completa con el espacio máximo físico
         self.slots = [None] * self.total_slots
 
         # TODO: (PRUEBA) Herramientas iniciales de prueba para el desarrollo
         self.slots[0] = {"item_id": "axe", "quantity": 1}   # Slot 1 (Índice 0) -> Hacha
         self.slots[1] = {"item_id": "pickaxe", "quantity": 1} # Slot 2 (Índice 1) -> Pico
 
+
+    def get_allowed_slots(self):
+        """Calcula cuántos slots totales están disponibles según el nivel de la mochila"""
+        if self.backpack_level == 1:
+            return 12  # Solo los 12 slots base de la Hotbar
+        elif self.backpack_level == 2:
+            return 24  # Hotbar (12) + 1 Hilera de mochila (12)
+        else:
+            return 36  # Hotbar (12) + 2 Hileras de mochila (24)
+        
     def add_item(self, item_id, quantity=1, max_stack=64):
         """
-        Intenta añadir un ítem al inventario gestionando el stacking automático.
-        Retorna True si se pudo añadir todo, o False si el inventario está lleno.
+        Intenta añadir un ítem al inventario gestionando el stacking automático
+        y respetando los límites de slots desbloqueados por la mochila.
         """
-        # 1. PASO 1: Buscar si ya existe el ítem en algún slot para acumularlo (Stacking)
-        for i in range(self.total_slots):
-            if self.slots[i] and self.slots[i]["item_id"] == item_id:
+        # Ahora limitamos la búsqueda de stacking únicamente a los slots permitidos
+        allowed_slots = self.get_allowed_slots()
+        
+        # 1. PASO 1: Buscar si ya existe el ítem en algún slot permitido para acumularlo (Stacking)
+        for i in range(allowed_slots):
+            # Añadida validación de seguridad 'i < len(self.slots)' para blindar contra IndexErrors
+            if i < len(self.slots) and self.slots[i] and self.slots[i]["item_id"] == item_id:
                 # Comprobar si el slot aún tiene espacio antes de llegar al límite
                 current_qty = self.slots[i]["quantity"]
                 if current_qty < max_stack:
@@ -37,8 +55,9 @@ class InventorySystem:
                         return True
 
         # 2. PASO 2: Si aún queda cantidad por añadir, buscar el primer slot completamente vacío
-        for i in range(self.total_slots):
-            if self.slots[i] is None:
+        for i in range(allowed_slots):
+            # Añadida la misma validación de seguridad aquí para el llenado de slots vacíos
+            if i < len(self.slots) and self.slots[i] is None:
                 amount_to_add = min(quantity, max_stack)
                 self.slots[i] = {"item_id": item_id, "quantity": amount_to_add}
                 quantity -= amount_to_add
@@ -56,7 +75,7 @@ class InventorySystem:
 
     def remove_item(self, slot_index, quantity=1):
         """Elimina una cantidad específica de un slot determinado"""
-        if 0 <= slot_index < self.total_slots and self.slots[slot_index]:
+        if 0 <= slot_index < self.get_allowed_slots() and self.slots[slot_index]:
             if self.slots[slot_index]["quantity"] >= quantity:
                 self.slots[slot_index]["quantity"] -= quantity
                 # Si el slot se queda en 0, lo vaciamos por completo
@@ -76,12 +95,13 @@ class InventorySystem:
         print("--------------------------------\n")
 
     def draw_hotbar(self, surface, active_index):
-        """Dibuja la barra de inventario visual en la parte inferior de la pantalla"""
+        """Dibuja únicamente la barra inferior de 12 slots en el mundo abierto"""
         # 1. Configuración de dimensiones
         slot_size = 48
         padding = 8
-        # Calcular el ancho total de la hotbar para poder centrarla horizontalmente
-        total_width = (slot_size * self.total_slots) + (padding * (self.total_slots - 1))
+        # Forzamos a que la barra mida siempre 12 ranuras para mantenerla centrada y limpia
+        hotbar_slots = 12
+        total_width = (slot_size * hotbar_slots) + (padding * (hotbar_slots - 1))
         
         # Posición inicial X (centrada) e Y (cerca del borde inferior)
         start_x = (surface.get_width() - total_width) // 2
@@ -90,8 +110,8 @@ class InventorySystem:
         # Fuente para las cantidades
         font = pygame.font.SysFont("Arial", 14, bold=True)
         
-        # 2. Dibujar slot por slot
-        for i in range(self.total_slots):
+        # 2. Recorremos estrictamente del slot 0 al 11
+        for i in range(hotbar_slots):
             slot_x = start_x + i * (slot_size + padding)
             slot_rect = pygame.Rect(slot_x, start_y, slot_size, slot_size)
             
@@ -124,23 +144,25 @@ class InventorySystem:
                 pygame.draw.rect(surface, (255, 255, 255), slot_rect, 3) # Borde blanco de 3px de grosor
 
     def get_total_quantity(self, item_id):
-        """Devuelve la cantidad total acumulada de un ítem en todo el inventario"""
+        """Devuelve la cantidad total acumulada de un ítem en los slots permitidos"""
         total = 0
-        for slot in self.slots:
-            if slot and slot["item_id"] == item_id:
-                total += slot["quantity"]
+        # Evita buscar ingredientes en slots bloqueados
+        for i in range(self.get_allowed_slots()):
+            if self.slots[i] and self.slots[i]["item_id"] == item_id:
+                total += self.slots[i]["quantity"]
         return total
 
     def remove_item_amount(self, item_id, amount_to_remove):
-        """Busca y elimina una cantidad específica de un ítem a través de los slots"""
-        for i in range(self.total_slots):
+        """Busca y elimina una cantidad de un ítem a través de los slots permitidos"""
+        # Consume materiales únicamente de los espacios accesibles
+        for i in range(self.get_allowed_slots()):
             if self.slots[i] and self.slots[i]["item_id"] == item_id:
                 if self.slots[i]["quantity"] > amount_to_remove:
                     self.slots[i]["quantity"] -= amount_to_remove
                     return
                 else:
                     amount_to_remove -= self.slots[i]["quantity"]
-                    self.slots[i] = None # Slot se vacía si se consume por completo
+                    self.slots[i] = None
                     
             if amount_to_remove <= 0:
                 break
