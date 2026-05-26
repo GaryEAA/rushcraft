@@ -11,6 +11,7 @@ from src.managers.game_clock import GameClock
 from src.effects.night_filter import NightFilter
 from src.effects.particle_manager import ParticleManager
 from src.managers.recipe_manager import RecipeManager
+from src.ui.crafting_menu import CraftingMenu
 
 class WorldState(BaseState):
     def __init__(self, state_manager):
@@ -43,7 +44,11 @@ class WorldState(BaseState):
         # Instanciar el administrador de efectos visuales
         self.particle_manager = ParticleManager(self.visible_sprites)
 
+        # Instanciar el administrador de recetas
         self.recipe_manager = RecipeManager()
+
+        # Instanciar la interfaz gráfica del menú
+        self.crafting_menu = CraftingMenu(self.recipe_manager)
 
     def load_entities_data(self):
         try:
@@ -73,59 +78,73 @@ class WorldState(BaseState):
 
     def handle_events(self, events):
         for event in events:
+            # Manejo de eventos de teclado
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.manager.change_state("menu")
                     
-                # MECÁNICA DE INTERACCIÓN FÍSICA (Pulsar ESPACIO para recolectar)
-                if event.key == pygame.K_SPACE:
-                    self.check_resource_interaction()
+                # Tecla 'E' para Abrir / Cerrar el menú visual de crafteo
+                if event.key == pygame.K_e:
+                    self.crafting_menu.toggle()
 
-                # TECLA 'C': Intentar craftear Hacha de Piedra
-                if event.key == pygame.K_c:
-                    self.recipe_manager.check_and_craft("stone_axe", self.player.inventory)
-                    self.player.inventory.debug_display() # Ver cambios en consola
+            # DETECCIÓN DE CLICS DEL RATÓN
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1: # 1 = Clic Izquierdo
+                    # Caso A: Si el menú de crafteo está abierto, el clic interactúa con la UI
+                    if self.crafting_menu.is_open:
+                        self.crafting_menu.handle_click(event.pos, self.player.inventory)
+                    # Caso B: Si el menú está cerrado, el clic se usa para golpear recursos en el mundo
+                    else:
+                        self.check_resource_interaction(event.pos)
 
-                # TECLA 'V': Intentar craftear Pico de Piedra
-                if event.key == pygame.K_v:
-                    self.recipe_manager.check_and_craft("stone_pickaxe", self.player.inventory)
-                    self.player.inventory.debug_display()
-
-    def check_resource_interaction(self):
-        """Busca si hay algún recurso lo suficientemente cerca del jugador para golpearlo"""
-        # Rango de alcance del jugador (Leemos el rango del ataque desde su configuración o usamos 60)
-        interaction_range = 60
+    def check_resource_interaction(self, mouse_pos):
+        """
+        Verifica si el jugador hizo clic sobre un recurso y si está lo 
+        suficientemente cerca de él para golpearlo, considerando el desplazamiento de la cámara.
+        """
+        # 1. LEER DESDE CONFIGURACIÓN: Extraemos el rango dinámicamente del JSON cargado
+        # Si por alguna razón no existe en el JSON, !!!Usa 80 por defecto de respaldo!!!
+        interaction_range = self.entities_data["player"].get("interaction_range", 80)
+        
+        # 2. TRADUCIR COORDENADAS: Sumamos el offset de la cámara a la posición del mouse en pantalla
+        # para obtener las coordenadas reales en la cuadrícula del mundo.
+        world_mouse_x = mouse_pos[0] + self.visible_sprites.offset.x
+        world_mouse_y = mouse_pos[1] + self.visible_sprites.offset.y
+        world_mouse_pos = (world_mouse_x, world_mouse_y)
         
         for resource in self.resource_sprites:
-            # Calcular la distancia matemática entre el centro del jugador y el recurso
-            player_center = pygame.math.Vector2(self.player.rect.center)
-            resource_center = pygame.math.Vector2(resource.rect.center)
-            distance = player_center.distance_to(resource_center)
-            
-            # Si el recurso está dentro del rango de interacción, lo golpeamos
-            if distance <= interaction_range:
-                # Calcular dinámicamente el daño basado en lo que el jugador tiene en la mano
-                dynamic_damage = self.player.get_current_tool_damage(resource.type)
+            # Ahora la colisión compara coordenadas del mundo con rectángulos del mundo ✅
+            if resource.rect.collidepoint(world_mouse_pos):
                 
-                print(f"Golpeando con herramienta activa. Daño calculado: {dynamic_damage}")
-
-                # NUEVO: Generar ráfaga de partículas en el centro del recurso antes de aplicar el daño
-                self.particle_manager.create_hit_particles(resource.rect.center, resource.type)
-
-                # Pasar el daño dinámico calculado al recurso
-                resource.hit(
-                    damage = dynamic_damage, 
-                    drop_groups = [self.visible_sprites, self.drop_sprites]
-                )
-                break # Solo golpear un recurso a la vez
-
+                # Calcular la distancia real entre el centro del jugador y el recurso
+                player_center = pygame.math.Vector2(self.player.rect.center)
+                resource_center = pygame.math.Vector2(resource.rect.center)
+                distance = player_center.distance_to(resource_center)
+                
+                if distance <= interaction_range:
+                    dynamic_damage = self.player.get_current_tool_damage(resource.type)
+                    print(f"Clic detectado en {resource.type}. Daño: {dynamic_damage}")
+                    
+                    # Generar partículas en el lugar del impacto
+                    self.particle_manager.create_hit_particles(resource.rect.center, resource.type)
+                    
+                    # Golpear el recurso
+                    resource.hit(
+                        damage = dynamic_damage, 
+                        drop_groups = [self.visible_sprites, self.drop_sprites]
+                    )
+                    break
+                
     def update(self, dt):
         # Actualizar el reloj global
         self.clock.update(dt)
+
         # Actualizar la opacidad del filtro de noche
         self.night_filter.update(self.clock.hour, self.clock.minute)
-        # El jugador necesita saber dónde están los recursos para no atravesarlos
-        self.player.update(dt, self.resource_sprites)
+
+        # El jugador solo se mueve e interactúa si el menú está CERRADO
+        if not self.crafting_menu.is_open:
+            self.player.update(dt, self.resource_sprites)
 
         # Actualizar el comportamiento físico y desaparición de partículas
         self.particle_manager.update(dt)
@@ -142,6 +161,7 @@ class WorldState(BaseState):
         self.drop_sprites.update(dt)
 
     def draw(self, surface):
+        # TODO: Dibujar el mundo, las entidades y el filtro nocturno
         # Dibujar el mundo y las entidades (Abajo de todo)
         surface.fill(self.color_grass)
         self.visible_sprites.custom_draw(self.player)
@@ -162,3 +182,6 @@ class WorldState(BaseState):
 
         # TODO: Dibujar la Hotbar del inventario del jugador
         self.player.inventory.draw_hotbar(surface, self.player.active_slot)
+
+        # TODO: Interfaz Gráfica del Menú de Crafteo (Al frente de todo)
+        self.crafting_menu.draw(surface)
