@@ -9,6 +9,7 @@ from src.entities.resources import Resource
 from src.core.camera import CameraGroup
 from src.managers.game_clock import GameClock
 from src.effects.night_filter import NightFilter
+from src.effects.particle_manager import ParticleManager
 
 class WorldState(BaseState):
     def __init__(self, state_manager):
@@ -37,6 +38,9 @@ class WorldState(BaseState):
 
         # Grupo para objetos que caen al romper recursos
         self.drop_sprites = pygame.sprite.Group()
+
+        # Instanciar el administrador de efectos visuales
+        self.particle_manager = ParticleManager(self.visible_sprites)
 
     def load_entities_data(self):
         try:
@@ -92,6 +96,9 @@ class WorldState(BaseState):
                 
                 print(f"Golpeando con herramienta activa. Daño calculado: {dynamic_damage}")
 
+                # NUEVO: Generar ráfaga de partículas en el centro del recurso antes de aplicar el daño
+                self.particle_manager.create_hit_particles(resource.rect.center, resource.type)
+
                 # Pasar el daño dinámico calculado al recurso
                 resource.hit(
                     damage = dynamic_damage, 
@@ -106,6 +113,9 @@ class WorldState(BaseState):
         self.night_filter.update(self.clock.hour, self.clock.minute)
         # El jugador necesita saber dónde están los recursos para no atravesarlos
         self.player.update(dt, self.resource_sprites)
+
+        # Actualizar el comportamiento físico y desaparición de partículas
+        self.particle_manager.update(dt)
 
         # TODO: Lógica de recolección (Pickup)
         collided_drops = pygame.sprite.spritecollide(self.player, self.drop_sprites, False)
