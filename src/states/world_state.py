@@ -126,7 +126,10 @@ class WorldState(BaseState):
                     
                     # Prioridad 2: Si los menús están cerrados, interactuamos con el mundo (recursos)
                     elif not self.inventory_screen.is_open: 
-                        self.check_resource_interaction(event.pos)
+                        # Primero intentamos golpear a un enemigo. 
+                        # Si no golpeamos a ninguno, entonces verificamos los recursos.
+                        if not self.check_enemy_interaction(event.pos):
+                            self.check_resource_interaction(event.pos)
 
     def check_resource_interaction(self, mouse_pos):
         """Verifica interacción con recursos considerando el offset de la cámara"""
@@ -166,6 +169,15 @@ class WorldState(BaseState):
             for enemy in self.enemy_sprites:
                 enemy.update(dt, self.resource_sprites, self.player.rect)
 
+            # Detectar si algún enemigo está tocando físicamente al jugador
+            # Usamos spritecollide para verificar colisiones de rectángulos de forma masiva
+            collided_enemies = pygame.sprite.spritecollide(self.player, self.enemy_sprites, False)
+            for enemy in collided_enemies:
+                # El jugador intenta tomar daño basado en el stat .damage del enemigo (leído del JSON)
+                if self.player.take_damage(enemy.damage):
+                    # Generamos partículas de golpe de tipo "blood" o efectos visuales en la posición del jugador
+                    self.particle_manager.create_hit_particles(self.player.rect.center, "rock") # Usamos rock provisionalmente
+
         self.particle_manager.update(dt)
 
         # Lógica de recolección (Pickup)
@@ -201,3 +213,40 @@ class WorldState(BaseState):
 
         # Menú de Crafteo (Tecla TAB)
         self.crafting_menu.draw(surface)
+
+    def check_enemy_interaction(self, mouse_pos):
+        """Verifica si el jugador hizo clic sobre un enemigo dentro de su rango de ataque"""
+        # Leemos el rango de ataque y daño base desde las estadísticas del jugador
+        player_stats = self.entities_data["player"]
+        attack_range = player_stats.get("attack_range", 60)
+        
+        # Traducir la posición del ratón de la pantalla a coordenadas del mundo (con el offset de cámara)
+        world_mouse_x = mouse_pos[0] + self.visible_sprites.offset.x
+        world_mouse_y = mouse_pos[1] + self.visible_sprites.offset.y
+        world_mouse_pos = (world_mouse_x, world_mouse_y)
+        
+        for enemy in self.enemy_sprites:
+            # Verificar si el cursor está encima del rectángulo del enemigo
+            if enemy.rect.collidepoint(world_mouse_pos):
+                # Calcular la distancia entre el centro del jugador y el enemigo
+                player_center = pygame.math.Vector2(self.player.rect.center)
+                enemy_center = pygame.math.Vector2(enemy.rect.center)
+                distance = player_center.distance_to(enemy_center)
+                
+                # Si está lo suficientemente cerca, lo atacamos
+                if distance <= attack_range:
+                    # Obtenemos el daño dinámico de la herramienta activa del jugador
+                    # TODO: (PROVISIONAL) Si no hay método adaptado para enemigos, usamos el daño base del jugador por ahora
+                    damage_inflicted = player_stats.get("damage", 10)
+                    
+                    # Hacer parpadear partículas en el enemigo
+                    self.particle_manager.create_hit_particles(enemy.rect.center, "tree") # Usamos partículas de árbol provisionalmente
+                    
+                    # Aplicar daño al enemigo
+                    enemy.take_damage(damage_inflicted)
+                    return True # Retornamos True para indicar que sí hubo ataque y no pique un árbol por accidente
+                else:
+                    print("¡El enemigo está demasiado lejos para atacar!")
+                    return True # Bloquea el golpe al árbol porque tu intención era atacar al enemigo
+                    
+        return False # No se clickeó ningún enemigo

@@ -21,6 +21,14 @@ class Player(Entity):
         # Cargar datos dinámicos de los ítems
         self.item_data = self.load_item_data()
 
+        # Control de vida dinámico basado en las stats del JSON
+        self.max_health = stats.get("max_health", 100)
+        self.current_health = self.max_health
+        
+        # Temporizadores para evitar daño masivo continuo
+        self.invulnerable_timer = 0.0
+        self.invulnerable_duration = 0.5 # Medio segundo de inmunidad tras ser golpeado
+
     # Carga de forma segura el archivo JSON de configuración de balanceo
     def load_item_data(self):
         """Carga la configuración de combate y materiales desde el JSON"""
@@ -85,6 +93,10 @@ class Player(Entity):
         # Le pasamos los obstáculos al método move de la clase madre (Entity)
         self.move(dt, obstacle_sprites)
 
+        # Reducir el tiempo de invulnerabilidad frame a frame
+        if self.invulnerable_timer > 0:
+            self.invulnerable_timer -= dt
+
     def get_current_tool_damage(self, resource_type):
         """
         Calcula el daño proporcional cruzando el tipo de herramienta, 
@@ -126,3 +138,20 @@ class Player(Entity):
 
         # Si algo falla en la lectura, daño base de seguridad por defecto
         return self.item_data.get("hand_damage", 2)
+
+    def take_damage(self, amount):
+        """Aplica daño al jugador si no es invulnerable"""
+        if self.invulnerable_timer <= 0:
+            self.current_health -= amount
+            self.invulnerable_timer = self.invulnerable_duration
+            
+            # Forzar a que la vida no baje de 0
+            if self.current_health < 0:
+                self.current_health = 0
+                
+            print(f"¡Jugador golpeado! Vida restante: {self.current_health}/{self.max_health}")
+            
+            if self.current_health == 0:
+                print("¡Has muerto!") # Aquí luego se puede disparar una pantalla de Game Over
+            return True
+        return False

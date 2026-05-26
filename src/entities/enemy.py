@@ -14,6 +14,10 @@ class Enemy(Entity):
         self.name = stats["name"]
         self.damage = stats["damage"]
         
+        # Declaramos explícitamente la vida máxima y actual del enemigo aquí
+        self.max_health = stats["max_health"]
+        self.current_health = self.max_health
+
         # Le damos el tamaño estándar del sprite y lo pintamos con su color del JSON
         self.image = pygame.Surface((32, 32))
         self.image.fill(stats["color"])
@@ -55,3 +59,14 @@ class Enemy(Entity):
         
         # 2. Moverse físicamente en el mapa respetando los obstáculos (resource_sprites)
         self.move(dt, obstacle_sprites)
+
+    def take_damage(self, amount):
+        """Resta vida al enemigo y devuelve True si muere"""
+        self.current_health -= amount
+        print(f"¡{self.name} golpeado! Vida restante: {self.current_health}/{self.max_health}")
+        
+        if self.current_health <= 0:
+            print(f"¡{self.name} ha sido derrotado!")
+            self.kill() # Elimina automáticamente al enemigo de todos los grupos de sprites de Pygame
+            return True
+        return False
