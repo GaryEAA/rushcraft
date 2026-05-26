@@ -1,4 +1,5 @@
 import pygame
+from .item_drop import ItemDrop
 
 class Resource(pygame.sprite.Sprite):
     def __init__(self, x, y, resource_type, health, item_yield):
@@ -28,13 +29,24 @@ class Resource(pygame.sprite.Sprite):
         else:
             self.hitbox = self.rect.copy().inflate(-6, -6)   # La roca es casi sólida por complet
 
-    def hit(self, damage=10):
-        """Disminuye la vida del recurso cuando el jugador lo golpea"""
+    def hit(self, damage, drop_groups):
+        """Disminuye la vida del recurso y genera el drop si es destruido"""
         self.health -= damage
         print(f"¡Impacto en {self.type}! Vida restante: {self.health}/{self.max_health}")
         
-        # Si la vida llega a 0, el recurso se destruye
+        # Si la vida llega a 0, el recurso expulsa el ítem al suelo y se destruye
         if self.health <= 0:
             print(f"El {self.type} ha sido destruido por completo.")
-            return True # Indica que debe ser removido y dar su recompensa
-        return False
+            
+            # Definir cantidad según tipo de recurso
+            qty = 15 if self.type == "tree" else 8
+            
+            # Instanciamos el ítem físico flotando en la posición del recurso
+            ItemDrop(
+                pos = self.rect.center,
+                groups = drop_groups,
+                item_id = self.item_yield,
+                amount = qty
+            )
+            
+            self.kill() # Desaparece el árbol/roca

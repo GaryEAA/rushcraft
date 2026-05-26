@@ -1,3 +1,5 @@
+from turtle import distance
+
 import pygame
 import json
 import random
@@ -32,6 +34,9 @@ class WorldState(BaseState):
 
         # Instanciar el filtro con las dimensiones de la pantalla
         self.night_filter = NightFilter(800, 600)
+
+        # Grupo para objetos que caen al romper recursos
+        self.drop_sprites = pygame.sprite.Group()
 
     def load_entities_data(self):
         try:
@@ -80,20 +85,14 @@ class WorldState(BaseState):
             resource_center = pygame.math.Vector2(resource.rect.center)
             distance = player_center.distance_to(resource_center)
             
-            # Si el recurso está en rango de golpe
+            # Si el recurso está dentro del rango de interacción, lo golpeamos
             if distance <= interaction_range:
-                # El jugador golpea el recurso aplicando su daño por defecto (10)
-                is_destroyed = resource.hit(damage=10)
-                
-                if is_destroyed:
-                    # Dar la recompensa directo al inventario del jugador
-                    # Un árbol da 15 de madera, una roca da 8 de piedra
-                    qty = 15 if resource.type == "tree" else 8
-                    self.player.inventory.add_item(item_id=resource.item_yield, quantity=qty)
-                    
-                    # Hacer desaparecer el recurso del juego
-                    resource.kill() 
-                    self.player.inventory.debug_display()
+                # Modificado: Le pasamos el daño y la lista de grupos donde se creará el ítem suelto
+                # Al pasarlo a visible_sprites se dibuja en la cámara, y en drop_sprites se procesa su colisión
+                resource.hit(
+                    damage = 10, 
+                    drop_groups = [self.visible_sprites, self.drop_sprites]
+                )
                 break # Solo golpear un recurso a la vez
 
     def update(self, dt):
@@ -103,6 +102,17 @@ class WorldState(BaseState):
         self.night_filter.update(self.clock.hour, self.clock.minute)
         # El jugador necesita saber dónde están los recursos para no atravesarlos
         self.player.update(dt, self.resource_sprites)
+
+        # TODO: Lógica de recolección (Pickup)
+        collided_drops = pygame.sprite.spritecollide(self.player, self.drop_sprites, False)
+        for drop in collided_drops:
+            # Intentar añadir al inventario
+            if self.player.inventory.add_item(drop.item_id, drop.amount):
+                drop.kill() # Eliminar el ítem del suelo si se pudo recoger
+                print(f"Recogido: {drop.amount} de {drop.item_id}")
+
+        # Actualizar la animación de los drops
+        self.drop_sprites.update(dt)
 
     def draw(self, surface):
         # Dibujar el mundo y las entidades (Abajo de todo)
