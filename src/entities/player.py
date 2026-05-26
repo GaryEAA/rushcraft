@@ -57,9 +57,35 @@ class Player(Entity):
         # Tecla "." (Slot 12, Índice 11)
         if keys[pygame.K_PERIOD]:
             self.active_slot = 11
-            
+
     def update(self, dt, obstacle_sprites):
         """Actualización frame a frame del jugador con conocimiento de obstáculos"""
         self.input()
         # Le pasamos los obstáculos al método move de la clase madre (Entity)
         self.move(dt, obstacle_sprites)
+
+    def get_current_tool_damage(self, resource_type):
+        """
+        Revisa el slot activo del inventario y devuelve el daño correspondiente
+        según el tipo de recurso que se esté golpeando.
+        """
+        # 1. Obtener los datos del slot que tenemos seleccionado en la mano
+        active_item = self.inventory.slots[self.active_slot]
+        
+        # 2. Si la mano está vacía (None), el daño de supervivencia es mínimo
+        if active_item is None:
+            return 2 
+            
+        item_id = active_item["item_id"]
+        
+        # 3. LÓGICA DE EFICIENCIA DE HERRAMIENTAS
+        if item_id == "axe":
+            # El hacha es destructiva contra los árboles, pero mala contra las rocas
+            return 15 if resource_type == "tree" else 1
+            
+        elif item_id == "pickaxe":
+            # El pico destroza las rocas, pero no sirve para talar madera
+            return 25 if resource_type == "rock" else 1
+            
+        # 4. Si tienes cualquier otra cosa en la mano (madera, piedra, etc.), haces daño mínimo
+        return 2

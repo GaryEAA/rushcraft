@@ -9,6 +9,10 @@ class InventorySystem:
         self.total_slots = total_slots
         self.slots = [None] * self.total_slots
 
+        # TODO: (PRUEBA) Herramientas iniciales de prueba para el desarrollo
+        self.slots[0] = {"item_id": "axe", "quantity": 1}   # Slot 1 (Índice 0) -> Hacha
+        self.slots[1] = {"item_id": "pickaxe", "quantity": 1} # Slot 2 (Índice 1) -> Pico
+
     def add_item(self, item_id, quantity=1, max_stack=64):
         """
         Intenta añadir un ítem al inventario gestionando el stacking automático.

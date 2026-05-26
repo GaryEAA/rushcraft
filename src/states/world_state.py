@@ -87,10 +87,14 @@ class WorldState(BaseState):
             
             # Si el recurso está dentro del rango de interacción, lo golpeamos
             if distance <= interaction_range:
-                # Modificado: Le pasamos el daño y la lista de grupos donde se creará el ítem suelto
-                # Al pasarlo a visible_sprites se dibuja en la cámara, y en drop_sprites se procesa su colisión
+                # Calcular dinámicamente el daño basado en lo que el jugador tiene en la mano
+                dynamic_damage = self.player.get_current_tool_damage(resource.type)
+                
+                print(f"Golpeando con herramienta activa. Daño calculado: {dynamic_damage}")
+
+                # Pasar el daño dinámico calculado al recurso
                 resource.hit(
-                    damage = 10, 
+                    damage = dynamic_damage, 
                     drop_groups = [self.visible_sprites, self.drop_sprites]
                 )
                 break # Solo golpear un recurso a la vez
