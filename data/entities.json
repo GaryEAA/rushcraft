@@ -3,7 +3,7 @@
     "name": "Jugador",
     "max_health": 100,
     "speed": 300,
-    "inventory_size": 8,
+    "inventory_size": 12,
     "attack_range": 60,
     "damage": 10
   },

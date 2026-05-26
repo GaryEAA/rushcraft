@@ -102,7 +102,7 @@ class WorldState(BaseState):
         surface.fill(self.color_grass)
         self.visible_sprites.custom_draw(self.player)
 
-        # TODO: (PROVISIONAL) Dibujar el reloj digital en la esquina superior izquierda
+        # TODO: Dibujar el reloj digital en la esquina superior izquierda
         font = pygame.font.SysFont("Arial", 24, bold=True)
         time_text = font.render(self.clock.get_time_string(), True, (255, 255, 255))
 
@@ -112,3 +112,6 @@ class WorldState(BaseState):
 
         # Estampar el texto
         surface.blit(time_text, (15, 15))
+
+        # TODO: Dibujar la Hotbar del inventario del jugador
+        self.player.inventory.draw_hotbar(surface)
