@@ -82,10 +82,17 @@ class Player(Entity):
         if item_id == "axe":
             # El hacha es destructiva contra los árboles, pero mala contra las rocas
             return 15 if resource_type == "tree" else 1
-            
         elif item_id == "pickaxe":
             # El pico destroza las rocas, pero no sirve para talar madera
             return 25 if resource_type == "rock" else 1
-            
+
+        # NUEVAS HERRAMIENTAS DE PIEDRA (CRAFTEABLES)
+        elif item_id == "stone_axe":
+            # Destruye árboles de un solo golpe (30 de daño)
+            return 30 if resource_type == "tree" else 2
+        elif item_id == "stone_pickaxe":
+            # Destruye rocas masivamente (50 de daño)
+            return 50 if resource_type == "rock" else 2
+
         # 4. Si tienes cualquier otra cosa en la mano (madera, piedra, etc.), haces daño mínimo
         return 2

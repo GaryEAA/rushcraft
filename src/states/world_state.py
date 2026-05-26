@@ -10,6 +10,7 @@ from src.core.camera import CameraGroup
 from src.managers.game_clock import GameClock
 from src.effects.night_filter import NightFilter
 from src.effects.particle_manager import ParticleManager
+from src.managers.recipe_manager import RecipeManager
 
 class WorldState(BaseState):
     def __init__(self, state_manager):
@@ -41,6 +42,8 @@ class WorldState(BaseState):
 
         # Instanciar el administrador de efectos visuales
         self.particle_manager = ParticleManager(self.visible_sprites)
+
+        self.recipe_manager = RecipeManager()
 
     def load_entities_data(self):
         try:
@@ -77,6 +80,16 @@ class WorldState(BaseState):
                 # MECÁNICA DE INTERACCIÓN FÍSICA (Pulsar ESPACIO para recolectar)
                 if event.key == pygame.K_SPACE:
                     self.check_resource_interaction()
+
+                # TECLA 'C': Intentar craftear Hacha de Piedra
+                if event.key == pygame.K_c:
+                    self.recipe_manager.check_and_craft("stone_axe", self.player.inventory)
+                    self.player.inventory.debug_display() # Ver cambios en consola
+
+                # TECLA 'V': Intentar craftear Pico de Piedra
+                if event.key == pygame.K_v:
+                    self.recipe_manager.check_and_craft("stone_pickaxe", self.player.inventory)
+                    self.player.inventory.debug_display()
 
     def check_resource_interaction(self):
         """Busca si hay algún recurso lo suficientemente cerca del jugador para golpearlo"""

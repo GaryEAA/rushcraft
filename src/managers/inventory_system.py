@@ -122,3 +122,25 @@ class InventorySystem:
             if i == active_index:
                 # Dibujamos un rectángulo ligeramente más grande o un borde resaltado alrededor
                 pygame.draw.rect(surface, (255, 255, 255), slot_rect, 3) # Borde blanco de 3px de grosor
+
+    def get_total_quantity(self, item_id):
+        """Devuelve la cantidad total acumulada de un ítem en todo el inventario"""
+        total = 0
+        for slot in self.slots:
+            if slot and slot["item_id"] == item_id:
+                total += slot["quantity"]
+        return total
+
+    def remove_item_amount(self, item_id, amount_to_remove):
+        """Busca y elimina una cantidad específica de un ítem a través de los slots"""
+        for i in range(self.total_slots):
+            if self.slots[i] and self.slots[i]["item_id"] == item_id:
+                if self.slots[i]["quantity"] > amount_to_remove:
+                    self.slots[i]["quantity"] -= amount_to_remove
+                    return
+                else:
+                    amount_to_remove -= self.slots[i]["quantity"]
+                    self.slots[i] = None # Slot se vacía si se consume por completo
+                    
+            if amount_to_remove <= 0:
+                break
