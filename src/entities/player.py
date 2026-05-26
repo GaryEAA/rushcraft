@@ -16,6 +16,7 @@ class Player(Entity):
         # Inyectar el componente de inventario leyendo la capacidad desde el JSON
         slots_capacity = stats.get("inventory_size", 8)
         self.inventory = InventorySystem(total_slots=slots_capacity)
+        self.active_slot = 0 # Guarda el índice del slot seleccionado (0 al 11)
 
 
     def input(self):
@@ -25,7 +26,8 @@ class Player(Entity):
         # Resetear dirección en cada frame
         self.direction.x = 0
         self.direction.y = 0
-        
+
+        # TODO: MOVIMIENTO CON TECLAS WASD O FLECHAS
         # Movimiento en Eje Y (Arriba / Abajo)
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             self.direction.y = -1
@@ -38,6 +40,24 @@ class Player(Entity):
         elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.direction.x = 1
 
+        # TODO: SELECCIÓN DE LA HOTBAR
+        # Teclas del 1 al 9 (Índices 0 al 8)
+        for i in range(9):
+            if keys[pygame.K_1 + i]:
+                self.active_slot = i
+
+        # Tecla 0 (Slot 10, Índice 9)
+        if keys[pygame.K_0]:
+            self.active_slot = 9
+
+        # Tecla "," (Slot 11, Índice 10)
+        if keys[pygame.K_COMMA]:
+            self.active_slot = 10
+            
+        # Tecla "." (Slot 12, Índice 11)
+        if keys[pygame.K_PERIOD]:
+            self.active_slot = 11
+            
     def update(self, dt, obstacle_sprites):
         """Actualización frame a frame del jugador con conocimiento de obstáculos"""
         self.input()

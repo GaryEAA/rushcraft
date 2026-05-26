@@ -71,7 +71,7 @@ class InventorySystem:
                 print(f"Slot {i}: [ VACÍO ]")
         print("--------------------------------\n")
 
-    def draw_hotbar(self, surface):
+    def draw_hotbar(self, surface, active_index):
         """Dibuja la barra de inventario visual en la parte inferior de la pantalla"""
         # 1. Configuración de dimensiones
         slot_size = 48
@@ -113,3 +113,8 @@ class InventorySystem:
                 qty_x = slot_rect.right - qty_text.get_width() - 4
                 qty_y = slot_rect.bottom - qty_text.get_height() - 4
                 surface.blit(qty_text, (qty_x, qty_y))
+
+            # Si este slot es el seleccionado por el jugador, dibujar un borde dorado/blanco grueso
+            if i == active_index:
+                # Dibujamos un rectángulo ligeramente más grande o un borde resaltado alrededor
+                pygame.draw.rect(surface, (255, 255, 255), slot_rect, 3) # Borde blanco de 3px de grosor

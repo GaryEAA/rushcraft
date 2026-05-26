@@ -124,4 +124,4 @@ class WorldState(BaseState):
         surface.blit(time_text, (15, 15))
 
         # TODO: Dibujar la Hotbar del inventario del jugador
-        self.player.inventory.draw_hotbar(surface)
+        self.player.inventory.draw_hotbar(surface, self.player.active_slot)
