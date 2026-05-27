@@ -184,6 +184,8 @@ class WorldState(BaseState):
                         damage = dynamic_damage, 
                         drop_groups = [self.visible_sprites, self.drop_sprites]
                     )
+                    # Desencadena el efecto visual de hachazo/picazo en el jugador
+                    self.player.trigger_attack_animation()
                     break
                 
     def update(self, dt):
@@ -311,6 +313,10 @@ class WorldState(BaseState):
                     
                     # Aplicar daño al enemigo e imprimir en consola para validar
                     enemy.take_damage(damage_inflicted)
+
+                    # Desencadena el efecto visual en el jugador
+                    self.player.trigger_attack_animation()
+
                     print(f"¡Atacaste al {enemy.enemy_type}! Daño infligido: {damage_inflicted} usando el slot {self.player.active_slot}")                    
                     return True 
                 else:

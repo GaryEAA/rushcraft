@@ -10,8 +10,16 @@ class Player(Entity):
         """
         super().__init__(x, y, stats["speed"], stats["max_health"])
         
+        # Definir una base cuadrada fija para evitar tirones en las esquinas
+        self.image = pygame.Surface((40, 40))
+
         # Personalizar el color del cuadrado del jugador para diferenciarlo de un enemigo
         self.image.fill((30, 144, 255)) # Azul brillante (Dodger Blue)
+
+        # Actualizamos el rect para que coincida con las nuevas dimensiones de la imagen
+        centro_inicial = self.rect.center
+        self.rect = self.image.get_rect()
+        self.rect.center = centro_inicial
         
         # Inyectar el componente de inventario leyendo la capacidad desde el JSON
         slots_capacity = stats.get("inventory_size", 36) # Valor por defecto de 36 slots si no se especifica
@@ -31,6 +39,16 @@ class Player(Entity):
 
         # Estado de vida del jugador
         self.is_dead = False
+
+        # Control de orientación visual
+        self.facing_direction = "down" # Puede ser: "up", "down", "left", "right"
+        
+        # Variables para la animación de ataque por código
+        self.is_attacking = False
+        self.attack_duration = 0.15  # Qué tan rápido es el "hachazo" (en segundos)
+        self.attack_timer = 0.0
+        self.visual_scale_x = 1.0
+        self.visual_scale_y = 1.0
 
     # Carga de forma segura el archivo JSON de configuración de balanceo
     def load_item_data(self):
@@ -60,17 +78,21 @@ class Player(Entity):
         self.direction.y = 0
 
         # TODO: MOVIMIENTO CON TECLAS WASD O FLECHAS
-        # Movimiento en Eje Y (Arriba / Abajo)
+        # Movimiento en Eje Y y actualización de orientación
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             self.direction.y = -1
+            self.facing_direction = "up"
         elif keys[pygame.K_s] or keys[pygame.K_DOWN]:
             self.direction.y = 1
+            self.facing_direction = "down"
             
-        # Movimiento en Eje X (Izquierda / Derecha)
+        # Movimiento en Eje X y actualización de orientación
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
             self.direction.x = -1
+            self.facing_direction = "left"
         elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.direction.x = 1
+            self.facing_direction = "right"
 
         # TODO: SELECCIÓN DE LA HOTBAR
         # Teclas del 1 al 9 (Índices 0 al 8)
@@ -103,6 +125,15 @@ class Player(Entity):
         # Reducir el tiempo de invulnerabilidad frame a frame
         if self.invulnerable_timer > 0:
             self.invulnerable_timer -= dt
+
+        # Controlar la animación de ataque
+        if self.is_attacking:
+            self.attack_timer -= dt
+            if self.attack_timer <= 0:
+                self.is_attacking = False
+                # Regresa a su tamaño original (cuadrado perfecto)
+                self.visual_scale_x = 1.0
+                self.visual_scale_y = 1.0
 
     def get_current_tool_damage(self, resource_type):
         """
@@ -157,7 +188,7 @@ class Player(Entity):
             
             if self.current_health <= 0:
                 self.current_health = 0
-                self.is_dead = True # 🚨 [NUEVO] ¡El jugador ha muerto oficialmente!
+                self.is_dead = True # ¡El jugador ha muerto oficialmente!
                 print("¡Has muerto! Movimiento bloqueado.")
             else:
                 print(f"¡Jugador golpeado! Vida restante: {self.current_health}/{self.max_health}")
@@ -200,3 +231,33 @@ class Player(Entity):
         self.inventory.clear()
         
         return dropped_items
+    
+    def trigger_attack_animation(self):
+        """Activa un efecto visual de deformación al atacar"""
+        if not self.is_attacking:
+            self.is_attacking = True
+            self.attack_timer = self.attack_duration
+            
+            # Dependiendo de a dónde mira, se estira en un eje diferente
+            if self.facing_direction in ["left", "right"]:
+                self.visual_scale_x = 1.4  # Se estira hacia los lados
+                self.visual_scale_y = 0.7  # Se aplana un poco
+            else:
+                self.visual_scale_x = 0.7
+                self.visual_scale_y = 1.4  # Se estira hacia arriba/abajo
+
+    def draw_custom(self, surface, camera_offset):
+        """Dibuja al jugador aplicando el efecto de estiramiento por código"""
+        # 1. Calculamos el nuevo tamaño de la superficie basado en la animación
+        new_width = int(self.rect.width * self.visual_scale_x)
+        new_height = int(self.rect.height * self.visual_scale_y)
+        
+        # 2. Escalamos la imagen original de forma temporal para el frame actual
+        scaled_image = pygame.transform.scale(self.image, (new_width, new_height))
+        
+        # 3. Ajustamos la posición para que el estiramiento ocurra desde el centro del personaje
+        scaled_rect = scaled_image.get_rect()
+        scaled_rect.center = (self.rect.centerx - camera_offset.x, self.rect.centery - camera_offset.y)
+        
+        # 4. Lo dibujamos en la pantalla del juego
+        surface.blit(scaled_image, scaled_rect)
