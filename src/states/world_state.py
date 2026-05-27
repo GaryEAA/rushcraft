@@ -1,6 +1,9 @@
+from turtle import distance
+
 import pygame
 import json
 import random
+from src.entities import enemy
 from src.states.base_state import BaseState
 from src.entities.player import Player
 from src.entities.resources import Resource
@@ -297,20 +300,21 @@ class WorldState(BaseState):
                 enemy_center = pygame.math.Vector2(enemy.rect.center)
                 distance = player_center.distance_to(enemy_center)
                 
-                # Si está lo suficientemente cerca, lo atacamos
+                # Verificar si el enemigo está dentro del rango de ataque permitido
                 if distance <= attack_range:
-                    # Obtenemos el daño dinámico de la herramienta activa del jugador
-                    # TODO: (PROVISIONAL) Si no hay método adaptado para enemigos, usamos el daño base del jugador por ahora
-                    damage_inflicted = player_stats.get("damage", 10)
+                    # ¡Daño escalado dinámico con herramientas!
+                    # Usamos el método matemático pasándole "enemy" como el objetivo
+                    damage_inflicted = self.player.get_current_tool_damage("enemy")
                     
                     # Hacer parpadear partículas en el enemigo
-                    self.particle_manager.create_hit_particles(enemy.rect.center, "tree") # Usamos partículas de árbol provisionalmente
+                    self.particle_manager.create_hit_particles(enemy.rect.center, "tree")
                     
-                    # Aplicar daño al enemigo
+                    # Aplicar daño al enemigo e imprimir en consola para validar
                     enemy.take_damage(damage_inflicted)
-                    return True # Retornamos True para indicar que sí hubo ataque y no pique un árbol por accidente
+                    print(f"¡Atacaste al {enemy.enemy_type}! Daño infligido: {damage_inflicted} usando el slot {self.player.active_slot}")                    
+                    return True 
                 else:
                     print("¡El enemigo está demasiado lejos para atacar!")
-                    return True # Bloquea el golpe al árbol porque tu intención era atacar al enemigo
+                    return True
                     
         return False # No se clickeó ningún enemigo

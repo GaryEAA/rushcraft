@@ -1,25 +1,18 @@
 {
-    "hand_damage": 2,
+    "hand_damage": 5,
     "materials": {
-        "wood": {
-            "multiplier": 1.0
-        },
-        "stone": {
-            "multiplier": 2.0
-        }
+        "wood": { "multiplier": 1.0 },
+        "stone": { "multiplier": 1.8 }
     },
     "tools": {
         "axe": {
-            "base_damage": {
-                "tree": 15,
-                "rock": 1
-            }
+            "base_damage": { "tree": 15, "rock": 2, "enemy": 10 }
         },
         "pickaxe": {
-            "base_damage": {
-                "tree": 1,
-                "rock": 25
-            }
+            "base_damage": { "tree": 2, "rock": 25, "enemy": 8 }
+        },
+        "sword": {
+            "base_damage": { "tree": 1, "rock": 1, "enemy": 20 }
         }
     }
 }
