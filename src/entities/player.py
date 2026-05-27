@@ -3,7 +3,7 @@ from src.entities.entity import Entity
 from src.managers.inventory_system import InventorySystem
 
 class Player(Entity):
-    def __init__(self, x, y, stats):
+    def __init__(self, x, y, stats, items_data):
         """
         Instancia al jugador leyendo sus estadísticas iniciales.
         Ahora el jugador inicia con las manos 100% vacías.
@@ -26,8 +26,8 @@ class Player(Entity):
         self.inventory = InventorySystem(total_slots=slots_capacity)
         self.active_slot = 0 # Guarda el índice del slot seleccionado (0 al 11)
         
-        # Cargar datos dinámicos de los ítems
-        self.item_data = self.load_item_data()
+        # Guarda directamente los datos heredados sin leer el disco
+        self.item_data = items_data
 
         # Control de vida dinámico basado en las stats del JSON
         self.max_health = stats.get("max_health", 100)
@@ -58,25 +58,6 @@ class Player(Entity):
         self.attack_timer = 0.0
         self.visual_scale_x = 1.0
         self.visual_scale_y = 1.0
-
-    # Carga de forma segura el archivo JSON de configuración de balanceo
-    def load_item_data(self):
-        """Carga la configuración de combate y materiales desde el JSON"""
-        import json
-        try:
-            with open("data/items.json", "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"Error al cargar data/items.json: {e}. Usando backup de emergencia.")
-            # Respaldo en memoria por si el archivo JSON no existe o está mal formateado
-            return {
-                "hand_damage": 2,
-                "materials": {"wood": {"multiplier": 1.0}, "stone": {"multiplier": 2.0}},
-                "tools": {
-                    "axe": {"base_damage": {"tree": 15, "rock": 1}},
-                    "pickaxe": {"base_damage": {"tree": 1, "rock": 25}}
-                }
-            }
 
     def input(self):
         """Escucha el teclado y altera la dirección del vector de movimiento"""
@@ -306,3 +287,32 @@ class Player(Entity):
                 print("¡Te estás muriendo de hambre! Busca comida.")
         else:
             self.starve_timer = 0.0
+
+    def consume_item(self, item_id, consumables_config):
+        """Procesa el consumo de un ítem modificando las estadísticas del jugador de forma dinámica"""
+        
+        # 1. Verificar si el ítem existe en la configuración cargada del JSON
+        if item_id not in consumables_config:
+            print(f"DEBUG: El ítem '{item_id}' no es algo que te puedas comer o no está en el JSON.")
+            return False
+
+        # 2. Si el jugador ya está completamente lleno de vida Y hambre, no malgastar comida
+        if self.current_hunger >= self.max_hunger and self.current_health >= self.max_health:
+            print("Ya estás completamente lleno, no te cabe un bocado más.")
+            return False
+
+        # 3. Aplicar los efectos nutritivos leyendo las llaves correctas de tu JSON
+        item_effects = consumables_config[item_id]
+        
+        # Extraemos los valores de restauración de hambre y salud, así como el mensaje personalizado para cada comida
+        hunger_gain = item_effects.get("hunger_restore", 0)
+        health_gain = item_effects.get("health_restore", 0)
+        message = item_effects.get("message", "Te has comido algo.")
+        
+        self.current_hunger = min(self.max_hunger, self.current_hunger + hunger_gain)
+        self.current_health = min(self.max_health, self.current_health + health_gain)
+        
+        print(message)
+        print(f"Estado actual -> Hambre: {int(self.current_hunger)}/{self.max_hunger} | Vida: {self.current_health}/{self.max_health}")
+        
+        return True

@@ -1,3 +1,5 @@
+import math
+
 import pygame
 import json
 import random
@@ -21,8 +23,9 @@ class WorldState(BaseState):
         self.color_grass = (34, 139, 34)
         
         self.entities_data = self.load_entities_data()
+        self.items_data = self.load_items_data()
         player_stats = self.entities_data["player"]
-        self.player = Player(400, 300, player_stats)
+        self.player = Player(400, 300, player_stats, self.items_data)
         
         # Grupos de render y colisión
         self.visible_sprites = CameraGroup()
@@ -58,6 +61,15 @@ class WorldState(BaseState):
         except Exception as e:
             print(f"Error al cargar data/entities.json: {e}")
             return {"player": {"max_health": 100, "speed": 200}}
+
+    def load_items_data(self):
+        """Carga las configuraciones de herramientas, materiales y consumibles"""
+        try:
+            with open("data/items.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error al cargar data/items.json: {e}")
+            return {"consumables": {}}
 
     def generate_resources(self):
         """Distribuye árboles y rocas reales por el mapa de manera aleatoria"""
@@ -110,10 +122,12 @@ class WorldState(BaseState):
 
                 # TODO: (DEBUG) Presiona 'I' para inyectar recursos masivos
                 if event.key == pygame.K_i:
-                    # Añadimos 200 de madera y 200 de piedra de golpe
-                    self.player.inventory.add_item("wood", 200)
-                    self.player.inventory.add_item("stone", 200)
-                    print("Debug: Inyectados recursos de prueba en el inventario.")
+                    # Añadimos 100 de madera y 100 de piedra de golpe
+                    self.player.inventory.add_item("wood", 100)
+                    self.player.inventory.add_item("stone", 100)
+                    self.player.inventory.add_item("apple", 5)
+                    self.player.inventory.add_item("meat", 5)
+                    print("Debug: Recursos e ítems de comida inyectados correctamente.")
 
                 # Modo Survival: El mundo se conserva, el jugador reaparece en un punto aleatorio seguro
                 if event.key == pygame.K_r and self.player.is_dead:
@@ -143,7 +157,10 @@ class WorldState(BaseState):
 
             # 3. Detección de clics (UNIFICADA)
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1: # Clic izquierdo
+                # ==========================================
+                # CLIC IZQUIERDO (Atacar / Romper)
+                # ==========================================
+                if event.button == 1:
                     # Si el jugador está muerto, ignoramos por completo cualquier clic en el mundo
                     if self.player.is_dead:
                         continue
@@ -159,10 +176,36 @@ class WorldState(BaseState):
                         if not self.check_enemy_interaction(event.pos):
                             self.check_resource_interaction(event.pos)
 
+                # ==========================================
+                # CLIC DERECHO (Consumir / Usar comida desde la Hotbar)
+                # ==========================================
+                elif event.button == 3:
+                    if self.player.is_dead:
+                        continue
+                    
+                    # Solo se permite consumir ítems si no hay menús estorbando
+                    if not self.crafting_menu.is_open and not self.inventory_screen.is_open:
+                        active_slot = self.player.active_slot
+                        inventory = self.player.inventory
+                        
+                        # Accedemos de forma directa al slot correspondiente de tu lista lógica
+                        slot_data = inventory.slots[active_slot]
+                        
+                        if slot_data:
+                            item_id = slot_data["item_id"]
+                            # Extraemos la sección limpia de comidas desde el nuevo items.json
+                            consumables_config = self.items_data.get("consumables", {})
+                            
+                            # Enviamos los datos dinámicos al método interno del Player
+                            if self.player.consume_item(item_id, consumables_config):
+                                # Si lo ingiere con éxito, lo borramos usando tu método por índice
+                                inventory.remove_item(active_slot, quantity=1)
+
     def check_resource_interaction(self, mouse_pos):
         """Verifica interacción con recursos considerando el offset de la cámara"""
-        interaction_range = self.entities_data["player"].get("interaction_range", 80)
-        
+        # Le pregunta el rango directamente al objeto jugador
+        interaction_range = self.player.item_data.get("interaction_range", 80) if hasattr(self.player, 'item_data') else self.entities_data["player"].get("interaction_range", 80)
+
         world_mouse_x = mouse_pos[0] + self.visible_sprites.offset.x
         world_mouse_y = mouse_pos[1] + self.visible_sprites.offset.y
         world_mouse_pos = (world_mouse_x, world_mouse_y)
@@ -182,7 +225,6 @@ class WorldState(BaseState):
                         damage = dynamic_damage, 
                         drop_groups = [self.visible_sprites, self.drop_sprites]
                     )
-                    # Desencadena el efecto visual de hachazo/picazo en el jugador
                     self.player.trigger_attack_animation()
                     break
                 
@@ -283,45 +325,30 @@ class WorldState(BaseState):
 
     def check_enemy_interaction(self, mouse_pos):
         """Verifica si el jugador hizo clic sobre un enemigo dentro de su rango de ataque"""
-        # Leemos el rango de ataque y daño base desde las estadísticas del jugador
-        player_stats = self.entities_data["player"]
-        attack_range = player_stats.get("attack_range", 60)
+        # LIMPIEZA: Lo mismo aquí, evitamos buscar la info en el State si el Player ya la tiene
+        attack_range = self.entities_data["player"].get("attack_range", 60)
         
-        # Traducir la posición del ratón de la pantalla a coordenadas del mundo (con el offset de cámara)
         world_mouse_x = mouse_pos[0] + self.visible_sprites.offset.x
         world_mouse_y = mouse_pos[1] + self.visible_sprites.offset.y
         world_mouse_pos = (world_mouse_x, world_mouse_y)
         
         for enemy in self.enemy_sprites:
-            # Verificar si el cursor está encima del rectángulo del enemigo
             if enemy.rect.collidepoint(world_mouse_pos):
-                # Calcular la distancia entre el centro del jugador y el enemigo
                 player_center = pygame.math.Vector2(self.player.rect.center)
                 enemy_center = pygame.math.Vector2(enemy.rect.center)
                 distance = player_center.distance_to(enemy_center)
                 
-                # Verificar si el enemigo está dentro del rango de ataque permitido
                 if distance <= attack_range:
-                    # ¡Daño escalado dinámico con herramientas!
-                    # Usamos el método matemático pasándole "enemy" como el objetivo
                     damage_inflicted = self.player.get_current_tool_damage("enemy")
-                    
-                    # Hacer parpadear partículas en el enemigo
                     self.particle_manager.create_hit_particles(enemy.rect.center, "tree")
-                    
-                    # Aplicar daño al enemigo e imprimir en consola para validar
                     enemy.take_damage(damage_inflicted)
-
-                    # Desencadena el efecto visual en el jugador
                     self.player.trigger_attack_animation()
-
-                    print(f"¡Atacaste al {enemy.enemy_type}! Daño infligido: {damage_inflicted} usando el slot {self.player.active_slot}")                    
+                    print(f"¡Atacaste al {enemy.enemy_type}! Daño infligido: {damage_inflicted}")                    
                     return True 
                 else:
                     print("¡El enemigo está demasiado lejos para atacar!")
                     return True
-                    
-        return False # No se clickeó ningún enemigo
+        return False
     
     def draw_player_health_hud(self, surface):
         """Dibuja la vida del jugador centrada justo arriba de la hotbar"""
@@ -331,8 +358,8 @@ class WorldState(BaseState):
         # CONFIGURACIÓN DE LOS CONTENEDORES
         vida_por_corazon = 10
         max_corazones = self.player.max_health // vida_por_corazon
-        corazones_llenos = int(self.player.current_health // vida_por_corazon)
-        
+        # Evitamos que con 99.9 de vida se vacíe un corazón entero de golpe
+        corazones_llenos = math.ceil(self.player.current_health / vida_por_corazon)        
         tamano_bloque = 14  
         separacion = 4
         
@@ -371,7 +398,8 @@ class WorldState(BaseState):
         # Traducir los puntos de hambre actuales a cuántos bloques de 10 puntos pintar
         hambre_por_bloque = 10
         max_bloques_hambre = self.player.max_hunger // hambre_por_bloque
-        bloques_hambre_llenos = int(self.player.current_hunger // hambre_por_bloque)
+        # Si tienes 99.9, se divide entre 10 (= 9.99) y math.ceil lo sube a 10 bloques pintados.
+        bloques_hambre_llenos = math.ceil(self.player.current_hunger / hambre_por_bloque)
 
         for i in range(max_bloques_hambre):
             x = inicio_hambre_x + i * (tamano_bloque + separacion)

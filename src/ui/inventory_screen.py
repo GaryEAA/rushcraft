@@ -40,7 +40,7 @@ class InventoryScreen:
         surface.blit(title_surface, (self.rect.x + 30, self.rect.y + 25))
 
         # Texto explicativo para recordar la inyección de recursos masivos
-        inject_text = self.debug_font.render("[Debug: Presiona 'I' en el mundo para inyectar +200 recursos de prueba]", True, (140, 170, 140))
+        inject_text = self.debug_font.render("[Debug: Presiona 'I' en el mundo para inyectar recursos de prueba]", True, (140, 170, 140))
         surface.blit(inject_text, (self.rect.x + 25, self.rect.y + 68))
 
         # 3. Dibujar la matriz de 3 hileras x 12 columnas
