@@ -56,6 +56,16 @@ class WorldState(BaseState):
         self.spawn_cooldown = 4.0  # Intentar spawnear un enemigo cada 4 segundos de noche
         self.max_enemies_allowed = 8
 
+        self.spawn_rules = self.load_spawn_rules()
+
+    def load_spawn_rules(self):
+        try:
+            with open("data/spawn_rules.json", "r", encoding="utf-8") as f:
+                return json.load(f).get("spawn_rules", [])
+        except Exception as e:
+            print(f"Error cargando reglas de spawn: {e}")
+            return []
+
     def load_entities_data(self):
         try:
             with open("data/entities.json", "r", encoding="utf-8") as f:
@@ -91,58 +101,59 @@ class WorldState(BaseState):
 
     # Spawner dinámico condicionado por el ciclo
     def manage_enemy_spawning(self, dt):
-        """Gestiona la aparición y desaparición de enemigos según la hora del día"""
-        # Consideramos noche si la hora es posterior a las 19:00 o anterior a las 6:00
-        is_night = self.clock.hour >= 19 or self.clock.hour < 6
-
-        if is_night:
-            # Si es de noche, progresa el temporizador de nacimiento
-            self.spawn_timer += dt
-            if self.spawn_timer >= self.cooldown_or_spawn_time():
-                self.spawn_timer = 0
-                
-                # Solo spawnea si no se ha alcanzado el límite de dificultad
-                if len(self.enemy_sprites) < self.max_enemies_allowed:
-                    self.spawn_random_night_enemy()
-        else:
-            # LÓGICA DE AMANECER: Si es de día, los monstruos sufren daño por luz solar
-            self.spawn_timer = 0 # Reseteamos el reloj de spawn
+        # 1. ¿Hay alguna regla activa para esta hora?
+        active_rules = [
+            rule for rule in self.spawn_rules 
+            if rule["hours"][0] <= self.clock.hour < rule["hours"][1]
+        ]
+        
+        # 2. Si no hay reglas, es momento de que el sol haga su trabajo
+        if not active_rules:
+            if not self.clock.is_daytime:
+                self.clock.is_daytime = True # Sincronizamos estado
             
+            self.spawn_timer = 0
             for enemy in list(self.enemy_sprites):
-                # Generamos partículas de impacto/humo sobre el monstruo que se quema
                 self.particle_manager.create_hit_particles(enemy.rect.center, "tree")
-                
-                # Le aplicamos 15 de daño constante por segundo bajo el sol
                 if enemy.take_damage(15 * dt):
                     print(f"El sol ha incinerado a un {enemy.name}.")
+            return
+
+        # 3. Si hay reglas activas, spawneamos
+        self.spawn_timer += dt
+        # Usamos la primera regla activa encontrada
+        rule = active_rules[0] 
+        
+        if self.spawn_timer >= rule["spawn_rate"]:
+            self.spawn_timer = 0
+            if len(self.enemy_sprites) < rule["max_mobs"]:
+                self.spawn_enemy(random.choice(rule["mobs"]))
 
     def cooldown_or_spawn_time(self):
         # Retorna el cooldown base (se puede modificar según la hora exacta para dar más dificultad)
         return self.spawn_cooldown
 
-    def spawn_random_night_enemy(self):
-        """Elige un enemigo al azar del JSON y lo spawnea lejos del campo visual del jugador"""
+    def spawn_enemy(self, mob_type):
+        """Elige un enemigo según el tipo pasado por el JSON y lo spawnea."""
         enemies_config = self.entities_data.get("enemies", {})
-        available_types = [t for t in ["slime", "zombie"] if t in enemies_config]
+        stats = enemies_config.get(mob_type)
         
-        if not available_types:
+        if not stats:
+            print(f"Error: No se encontró la configuración para {mob_type}")
             return
 
-        chosen_type = random.choice(available_types)
-        stats = enemies_config[chosen_type]
-
-        # Matématica de Spawn Seguro: Spawner en un radio exterior aleatorio (lejos de la pantalla)
+        # Matemática de Spawn Seguro
         angle = random.uniform(0, 2 * math.pi)
-        distance = random.randint(500, 700) # Fuera del rango visual del jugador (800x600)
+        distance = random.randint(500, 700) 
         
         spawn_x = self.player.rect.centerx + int(math.cos(angle) * distance)
         spawn_y = self.player.rect.centery + int(math.sin(angle) * distance)
 
-        # Limitar dentro de los bordes del mapa general
+        # Limitar dentro de los bordes del mapa
         spawn_x = max(0, min(spawn_x, 1200))
         spawn_y = max(0, min(spawn_y, 1000))
 
-        new_enemy = Enemy(spawn_x, spawn_y, chosen_type, stats)
+        new_enemy = Enemy(spawn_x, spawn_y, mob_type, stats)
         self.visible_sprites.add(new_enemy)
         self.enemy_sprites.add(new_enemy)
         print(f"¡Un {new_enemy.name} ha aparecido en las sombras! ({spawn_x}, {spawn_y})")
@@ -328,12 +339,20 @@ class WorldState(BaseState):
         # Filtro de iluminación solar / nocturna
         self.night_filter.draw(surface)
 
+        # Obtenemos los datos de la fase directamente del reloj
+        fase_texto, fase_color = self.clock.get_current_phase_data()
+
         # Interfaz de la hora digital
-        font = pygame.font.SysFont("Arial", 24, bold=True)
-        time_text = font.render(self.clock.get_time_string(), True, (255, 255, 255))
-        bg_rect = pygame.Rect(10, 10, time_text.get_width() + 10, 35)
-        pygame.draw.rect(surface, (0, 0, 0, 150), bg_rect)
-        surface.blit(time_text, (15, 15))
+        font = pygame.font.SysFont("Arial", 22, bold=True)
+        time_str = f"{self.clock.get_time_string()} — {fase_texto}"
+        time_text = font.render(time_str, True, fase_color)
+
+        # Contenedor del reloj con fondo semitransparente oscuro
+        bg_rect = pygame.Rect(10, 10, time_text.get_width() + 15, 35)
+        pygame.draw.rect(surface, (0, 0, 0, 160), bg_rect, border_radius=5)
+
+        # Pintar el texto sobre el rectángulo
+        surface.blit(time_text, (18, 15))
 
         # Dibujamos primero la hotbar abajo fija
         self.player.inventory.draw_hotbar(surface, self.player.active_slot)
