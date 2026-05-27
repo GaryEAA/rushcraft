@@ -161,3 +161,8 @@ class InventorySystem:
                     
             if amount_to_remove <= 0:
                 break
+
+    def clear(self):
+        """Vuelve a llenar la lista de slots con None, vaciando el inventario"""
+        self.slots = [None] * self.total_slots
+        print("Inventario: Todos los slots han sido vaciados.")

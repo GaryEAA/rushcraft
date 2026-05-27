@@ -29,6 +29,9 @@ class Player(Entity):
         self.invulnerable_timer = 0.0
         self.invulnerable_duration = 0.5 # Medio segundo de inmunidad tras ser golpeado
 
+        # Estado de vida del jugador
+        self.is_dead = False
+
     # Carga de forma segura el archivo JSON de configuración de balanceo
     def load_item_data(self):
         """Carga la configuración de combate y materiales desde el JSON"""
@@ -89,6 +92,10 @@ class Player(Entity):
 
     def update(self, dt, obstacle_sprites):
         """Actualización frame a frame del jugador con conocimiento de obstáculos"""
+        # Si el jugador está muerto, no procesa movimiento ni inputs
+        if self.is_dead:
+            return
+        
         self.input()
         # Le pasamos los obstáculos al método move de la clase madre (Entity)
         self.move(dt, obstacle_sprites)
@@ -140,18 +147,56 @@ class Player(Entity):
         return self.item_data.get("hand_damage", 2)
 
     def take_damage(self, amount):
-        """Aplica daño al jugador si no es invulnerable"""
+        """Aplica daño al jugador si no es invulnerable y no está muerto"""
+        if self.is_dead:
+            return False
+            
         if self.invulnerable_timer <= 0:
             self.current_health -= amount
             self.invulnerable_timer = self.invulnerable_duration
             
-            # Forzar a que la vida no baje de 0
-            if self.current_health < 0:
+            if self.current_health <= 0:
                 self.current_health = 0
-                
-            print(f"¡Jugador golpeado! Vida restante: {self.current_health}/{self.max_health}")
-            
-            if self.current_health == 0:
-                print("¡Has muerto!") # Aquí luego se puede disparar una pantalla de Game Over
+                self.is_dead = True # 🚨 [NUEVO] ¡El jugador ha muerto oficialmente!
+                print("¡Has muerto! Movimiento bloqueado.")
+            else:
+                print(f"¡Jugador golpeado! Vida restante: {self.current_health}/{self.max_health}")
             return True
         return False
+
+    # Para cuando el jugador presione la tecla de revivir
+    def reset(self, start_x, start_y):
+        """Restablece los valores del jugador para una nueva partida"""
+        self.current_health = self.max_health
+        self.is_dead = False
+        self.invulnerable_timer = 0.0
+        
+        # Actualizamos el rectángulo físico
+        self.rect.topleft = (start_x, start_y)
+        
+        # Si el jugador tiene un atributo de posición separado (como un vector), también lo actualizamos
+        if hasattr(self, 'pos'):
+            self.pos.x = start_x
+            self.pos.y = start_y
+            
+        self.direction.x = 0
+        self.direction.y = 0
+
+    def drop_all_items(self):
+        """Vacía el inventario del jugador y devuelve los ítems para spawnearlos en el suelo"""
+        dropped_items = []
+        
+        # Al ser una lista, usamos enumerate para recorrer los slots de forma segura
+        for slot_idx, item_data in enumerate(self.inventory.slots):
+            # Si el slot no está vacío, extraemos su información para crear un drop en el suelo
+            if item_data is not None:
+                # Extraemos los datos usando las llaves de JSON/Diccionario: "item_id" y "quantity"
+                dropped_items.append({
+                    "item_id": item_data["item_id"],
+                    "amount": item_data["quantity"]
+                })
+                
+        # Vaciamos por completo el inventario llamando al nuevo método que agregamos
+        self.inventory.clear()
+        
+        return dropped_items

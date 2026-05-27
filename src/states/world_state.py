@@ -12,6 +12,7 @@ from src.effects.particle_manager import ParticleManager
 from src.managers.recipe_manager import RecipeManager
 from src.ui.crafting_menu import CraftingMenu
 from src.ui.inventory_screen import InventoryScreen
+from src.entities.resources import Resource, ItemDrop
 
 class WorldState(BaseState):
     def __init__(self, state_manager):
@@ -113,6 +114,28 @@ class WorldState(BaseState):
                     self.player.inventory.add_item("stone", 200)
                     print("Debug: Inyectados recursos de prueba en el inventario.")
 
+                # Modo Survival: El mundo se conserva, el jugador reaparece en un punto aleatorio seguro
+                if event.key == pygame.K_r and self.player.is_dead:
+                    # Forzamos un Spawn considerablemente más lejano (entre 300 y 450 px)
+                    # Esto garantiza que la cámara se desplace y NO recojas los ítems por accidente
+                    spawn_offset_x = random.choice([-1, 1]) * random.randint(300, 450)
+                    spawn_offset_y = random.choice([-1, 1]) * random.randint(300, 450)
+                    
+                    spawn_x = 400 + spawn_offset_x
+                    spawn_y = 300 + spawn_offset_y
+                    
+                    # Reiniciamos al jugador en la nueva posición aleatoria y lejana
+                    self.player.reset(spawn_x, spawn_y)
+                    
+                    # Vaciamos SOLAMENTE los enemigos para quitar los que estaban sobre tu cuerpo
+                    for enemy in self.enemy_sprites:
+                        enemy.kill()
+                    
+                    # Volvemos a spawnear enemigos limpios en sus posiciones de origen leyendo el JSON
+                    self.spawn_test_enemies()
+                            
+                    print(f"¡Respawn exitoso en ({spawn_x}, {spawn_y})! Camina hacia las coordenadas de tu muerte para recuperar tus cosas.")
+            
             # 2. Manejo de la rueda del ratón (Scroll)
             if event.type == pygame.MOUSEWHEEL:
                 self.crafting_menu.handle_scroll(event)
@@ -120,6 +143,10 @@ class WorldState(BaseState):
             # 3. Detección de clics (UNIFICADA)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: # Clic izquierdo
+                    # Si el jugador está muerto, ignoramos por completo cualquier clic en el mundo
+                    if self.player.is_dead:
+                        continue
+
                     # Prioridad 1: Si el menú de crafteo está abierto, procesamos sus botones
                     if self.crafting_menu.is_open:
                         self.crafting_menu.handle_click(event.pos, self.player.inventory)
@@ -170,22 +197,41 @@ class WorldState(BaseState):
                 enemy.update(dt, self.resource_sprites, self.player.rect)
 
             # Detectar si algún enemigo está tocando físicamente al jugador
-            # Usamos spritecollide para verificar colisiones de rectángulos de forma masiva
             collided_enemies = pygame.sprite.spritecollide(self.player, self.enemy_sprites, False)
             for enemy in collided_enemies:
-                # El jugador intenta tomar daño basado en el stat .damage del enemigo (leído del JSON)
                 if self.player.take_damage(enemy.damage):
-                    # Generamos partículas de golpe de tipo "blood" o efectos visuales en la posición del jugador
-                    self.particle_manager.create_hit_particles(self.player.rect.center, "rock") # Usamos rock provisionalmente
-
+                    self.particle_manager.create_hit_particles(self.player.rect.center, "rock")
+                    
+                    # Si este golpe mató al jugador, tiramos su inventario al suelo
+                    if self.player.is_dead:
+                        items_to_drop = self.player.drop_all_items()
+                        
+                        # Spawneamos cada ítem en el suelo
+                        for item in items_to_drop:
+                            offset_x = random.randint(-20, 20)
+                            offset_y = random.randint(-20, 20)
+                            
+                            # Clase ItemDrop recibe: pos (tupla), groups (los grupos de Pygame)
+                            drop_pos = (self.player.rect.centerx + offset_x, self.player.rect.centery + offset_y)
+                            
+                            # Al pasarle los grupos aquí, se añade automáticamente a render y lógica
+                            ItemDrop(
+                                drop_pos, 
+                                [self.visible_sprites, self.drop_sprites], 
+                                item["item_id"], 
+                                item["amount"]
+                            )
         self.particle_manager.update(dt)
 
         # Lógica de recolección (Pickup)
-        collided_drops = pygame.sprite.spritecollide(self.player, self.drop_sprites, False)
-        for drop in collided_drops:
-            if self.player.inventory.add_item(drop.item_id, drop.amount):
-                drop.kill()
-                print(f"Recogido: {drop.amount} de {drop.item_id}")
+        if not self.player.is_dead:
+            collided_drops = pygame.sprite.spritecollide(self.player, self.drop_sprites, False)
+            for drop in collided_drops:
+                if self.player.inventory.add_item(drop.item_id, drop.amount):
+                    drop.kill()
+                    print(f"Recogido: {drop.amount} de {drop.item_id}")
+
+        self.drop_sprites.update(dt)
 
         self.drop_sprites.update(dt)
 
@@ -213,6 +259,24 @@ class WorldState(BaseState):
 
         # Menú de Crafteo (Tecla TAB)
         self.crafting_menu.draw(surface)
+
+        # Pantalla de Game Over (Se dibuja por encima de TODO si está muerto)
+        if self.player.is_dead:
+            # Creamos una capa negra semitransparente para oscurecer el fondo
+            overlay = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180)) # Negro con transparencia Alfa
+            surface.blit(overlay, (0, 0))
+            
+            # Renderizar el texto de Muerte
+            font_gameover = pygame.font.SysFont("Arial", 50, bold=True)
+            font_sub = pygame.font.SysFont("Arial", 24)
+            
+            text_dead = font_gameover.render("HAS MUERTO", True, (255, 0, 0))
+            text_retry = font_sub.render("Presiona 'R' para reintentar", True, (255, 255, 255))
+            
+            # Centrar los textos en la pantalla
+            surface.blit(text_dead, (surface.get_width()//2 - text_dead.get_width()//2, surface.get_height()//2 - 50))
+            surface.blit(text_retry, (surface.get_width()//2 - text_retry.get_width()//2, surface.get_height()//2 + 20))
 
     def check_enemy_interaction(self, mouse_pos):
         """Verifica si el jugador hizo clic sobre un enemigo dentro de su rango de ataque"""
