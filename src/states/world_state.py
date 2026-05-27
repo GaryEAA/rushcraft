@@ -40,11 +40,8 @@ class WorldState(BaseState):
         # Generar el mapa con recursos reales
         self.generate_resources()
 
-        # Spawner de prueba para verificar que los enemigos funcionen
-        self.spawn_test_enemies()
-
         # Instanciar sistemas secundarios
-        self.clock = GameClock(time_scale=60.0) 
+        self.clock = GameClock(time_scale=600.0) # 60 -> 600 para testear el ciclo día/noche rápidamente
         self.night_filter = NightFilter(800, 600)
         self.drop_sprites = pygame.sprite.Group()
         self.particle_manager = ParticleManager(self.visible_sprites)
@@ -53,6 +50,11 @@ class WorldState(BaseState):
         # Menús e Interfaces
         self.crafting_menu = CraftingMenu(self.recipe_manager)
         self.inventory_screen = InventoryScreen()
+
+        # Variables de control para el Spawner Nocturno
+        self.spawn_timer = 0
+        self.spawn_cooldown = 4.0  # Intentar spawnear un enemigo cada 4 segundos de noche
+        self.max_enemies_allowed = 8
 
     def load_entities_data(self):
         try:
@@ -87,23 +89,63 @@ class WorldState(BaseState):
             self.visible_sprites.add(rock)
             self.resource_sprites.add(rock)
 
-    # Genera monstruos leyendo las estadísticas dinámicas del JSON
-    def spawn_test_enemies(self):
-        """Genera un par de enemigos de prueba en el mapa usando los datos del JSON"""
-        enemies_config = self.entities_data.get("enemies", {})
-        
-        # Validar que existan las llaves en el JSON antes de intentar spawnear
-        if "slime" in enemies_config:
-            # Creamos un slime cerca de la zona inicial
-            slime = Enemy(200, 200, "slime", enemies_config["slime"])
-            self.visible_sprites.add(slime) # Para que la cámara lo dibuje
-            self.enemy_sprites.add(slime)   # Para controlar su IA y colisiones
+    # Spawner dinámico condicionado por el ciclo
+    def manage_enemy_spawning(self, dt):
+        """Gestiona la aparición y desaparición de enemigos según la hora del día"""
+        # Consideramos noche si la hora es posterior a las 19:00 o anterior a las 6:00
+        is_night = self.clock.hour >= 19 or self.clock.hour < 6
+
+        if is_night:
+            # Si es de noche, progresa el temporizador de nacimiento
+            self.spawn_timer += dt
+            if self.spawn_timer >= self.cooldown_or_spawn_time():
+                self.spawn_timer = 0
+                
+                # Solo spawnea si no se ha alcanzado el límite de dificultad
+                if len(self.enemy_sprites) < self.max_enemies_allowed:
+                    self.spawn_random_night_enemy()
+        else:
+            # LÓGICA DE AMANECER: Si es de día, los monstruos sufren daño por luz solar
+            self.spawn_timer = 0 # Reseteamos el reloj de spawn
             
-        if "zombie" in enemies_config:
-            # Creamos un zombie un poco más alejado
-            zombie = Enemy(600, 150, "zombie", enemies_config["zombie"])
-            self.visible_sprites.add(zombie)
-            self.enemy_sprites.add(zombie)
+            for enemy in list(self.enemy_sprites):
+                # Generamos partículas de impacto/humo sobre el monstruo que se quema
+                self.particle_manager.create_hit_particles(enemy.rect.center, "tree")
+                
+                # Le aplicamos 15 de daño constante por segundo bajo el sol
+                if enemy.take_damage(15 * dt):
+                    print(f"El sol ha incinerado a un {enemy.name}.")
+
+    def cooldown_or_spawn_time(self):
+        # Retorna el cooldown base (se puede modificar según la hora exacta para dar más dificultad)
+        return self.spawn_cooldown
+
+    def spawn_random_night_enemy(self):
+        """Elige un enemigo al azar del JSON y lo spawnea lejos del campo visual del jugador"""
+        enemies_config = self.entities_data.get("enemies", {})
+        available_types = [t for t in ["slime", "zombie"] if t in enemies_config]
+        
+        if not available_types:
+            return
+
+        chosen_type = random.choice(available_types)
+        stats = enemies_config[chosen_type]
+
+        # Matématica de Spawn Seguro: Spawner en un radio exterior aleatorio (lejos de la pantalla)
+        angle = random.uniform(0, 2 * math.pi)
+        distance = random.randint(500, 700) # Fuera del rango visual del jugador (800x600)
+        
+        spawn_x = self.player.rect.centerx + int(math.cos(angle) * distance)
+        spawn_y = self.player.rect.centery + int(math.sin(angle) * distance)
+
+        # Limitar dentro de los bordes del mapa general
+        spawn_x = max(0, min(spawn_x, 1200))
+        spawn_y = max(0, min(spawn_y, 1000))
+
+        new_enemy = Enemy(spawn_x, spawn_y, chosen_type, stats)
+        self.visible_sprites.add(new_enemy)
+        self.enemy_sprites.add(new_enemy)
+        print(f"¡Un {new_enemy.name} ha aparecido en las sombras! ({spawn_x}, {spawn_y})")
 
     def handle_events(self, events):
         for event in events:
@@ -145,9 +187,6 @@ class WorldState(BaseState):
                     # Vaciamos SOLAMENTE los enemigos para quitar los que estaban sobre tu cuerpo
                     for enemy in self.enemy_sprites:
                         enemy.kill()
-                    
-                    # Volvemos a spawnear enemigos limpios en sus posiciones de origen leyendo el JSON
-                    self.spawn_test_enemies()
                             
                     print(f"¡Respawn exitoso en ({spawn_x}, {spawn_y})! Camina hacia las coordenadas de tu muerte para recuperar tus cosas.")
             
@@ -231,6 +270,9 @@ class WorldState(BaseState):
     def update(self, dt):
         self.clock.update(dt)
         self.night_filter.update(self.clock.hour, self.clock.minute)
+        
+        # Ejecutar el gestor del ciclo y spawneo de enemigos constantemente
+        self.manage_enemy_spawning(dt)
 
         # Bloquear movimiento del jugador si alguna interfaz está desplegada
         if not self.crafting_menu.is_open and not self.inventory_screen.is_open:
