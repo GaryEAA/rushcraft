@@ -1,5 +1,3 @@
-from turtle import distance
-
 import pygame
 import json
 import random
@@ -238,8 +236,6 @@ class WorldState(BaseState):
 
         self.drop_sprites.update(dt)
 
-        self.drop_sprites.update(dt)
-
     def draw(self, surface):
         # Dibujar base del mapa y terreno
         surface.fill(self.color_grass)
@@ -255,9 +251,11 @@ class WorldState(BaseState):
         pygame.draw.rect(surface, (0, 0, 0, 150), bg_rect)
         surface.blit(time_text, (15, 15))
 
-        # La hotbar se dibuja SIEMPRE abajo fija
-        # permitiendo interactuar visualmente con ella en tiempo real aunque la mochila esté superpuesta arriba.
+        # Dibujamos primero la hotbar abajo fija
         self.player.inventory.draw_hotbar(surface, self.player.active_slot)
+
+        # El HUD se dibuja DESPUÉS para que nunca quede oculto detrás
+        self.draw_player_health_hud(surface)
 
         # Pantalla de Mochila Completa (Tecla E)
         self.inventory_screen.draw(surface, self.player.inventory)
@@ -324,3 +322,56 @@ class WorldState(BaseState):
                     return True
                     
         return False # No se clickeó ningún enemigo
+    
+    def draw_player_health_hud(self, surface):
+        """Dibuja la vida del jugador centrada justo arriba de la hotbar"""
+
+        # CONFIGURACIÓN DE LOS CONTENEDORES
+        vida_por_corazon = 10
+        max_corazones = self.player.max_health // vida_por_corazon
+        corazones_llenos = int(self.player.current_health // vida_por_corazon)
+        
+        tamano_bloque = 14  
+        separacion = 4
+        
+        # MATEMÁTICA DE POSICIONAMIENTO CENTRAL
+        ancho_fila_completa = (max_corazones * tamano_bloque) + ((max_corazones - 1) * separacion)
+        centro_pantalla_x = surface.get_width() // 2
+        espacio_central = 15 
+        
+        inicio_x = centro_pantalla_x - espacio_central - ancho_fila_completa
+        
+        # Columna izquierda para vida, columna derecha para hambre (futura implementación)
+        inicio_y = surface.get_height() - 95 
+        
+        # Colores de prototipo
+        color_lleno = (255, 40, 40)      # Rojo Vida
+        color_vacio = (50, 50, 50)       # Gris Contenedor
+        color_borde = (0, 0, 0)
+
+        # BUCLE DE DIBUJADO (Columna Izquierda - Vida)
+        for i in range(max_corazones):
+            x = inicio_x + i * (tamano_bloque + separacion)
+            y = inicio_y
+            
+            rect_corazon = pygame.Rect(x, y, tamano_bloque, tamano_bloque)
+            color_actual = color_lleno if i < corazones_llenos else color_vacio
+                
+            pygame.draw.rect(surface, color_actual, rect_corazon)
+            pygame.draw.rect(surface, color_borde, rect_corazon, 2)
+
+        # =================================================================
+        # PROTOTIPO VISUAL: BARRA DE HAMBRE (Columna Derecha)
+        # =================================================================
+        inicio_hambre_x = centro_pantalla_x + espacio_central
+        color_hambre_lleno = (210, 105, 30)  # Color café/pan
+        
+        for i in range(10):
+            x = inicio_hambre_x + i * (tamano_bloque + separacion)
+            rect_hambre = pygame.Rect(x, inicio_y, tamano_bloque, tamano_bloque)
+            
+            pygame.draw.rect(surface, color_hambre_lleno, rect_hambre)
+            pygame.draw.rect(surface, color_borde, rect_hambre, 2)
+        # =================================================================
+        # GUÍA FUTURA: FILA 2 (Armadura y Sed)
+        # =================================================================
