@@ -33,6 +33,15 @@ class Player(Entity):
         self.max_health = stats.get("max_health", 100)
         self.current_health = self.max_health
         
+        # Control de Hambre dinámico basado en las stats del JSON
+        self.max_hunger = stats.get("max_hunger", 100)
+        self.current_hunger = self.max_hunger
+        self.hunger_decay_rate = stats.get("hunger_decay_rate", 1.5)
+        
+        # Temporizadores internos para los procesos metabólicos
+        self.regen_timer = 0.0
+        self.starve_timer = 0.0
+
         # Temporizadores para evitar daño masivo continuo
         self.invulnerable_timer = 0.0
         self.invulnerable_duration = 0.5 # Medio segundo de inmunidad tras ser golpeado
@@ -135,6 +144,9 @@ class Player(Entity):
                 self.visual_scale_x = 1.0
                 self.visual_scale_y = 1.0
 
+        # EJECUTAR METABOLISMO
+        self.handle_metabolism(dt)
+
     def get_current_tool_damage(self, resource_type):
         """
         Calcula el daño proporcional cruzando el tipo de herramienta, 
@@ -199,6 +211,7 @@ class Player(Entity):
     def reset(self, start_x, start_y):
         """Restablece los valores del jugador para una nueva partida"""
         self.current_health = self.max_health
+        self.current_hunger = self.max_hunger
         self.is_dead = False
         self.invulnerable_timer = 0.0
         
@@ -261,3 +274,35 @@ class Player(Entity):
         
         # 4. Lo dibujamos en la pantalla del juego
         surface.blit(scaled_image, scaled_rect)
+
+    def handle_metabolism(self, dt):
+        """Gestiona el consumo de comida, curación por saciedad y daño por hambre"""
+        # 1. GASTO DINÁMICO DE HAMBRE
+        # Si el jugador se está moviendo o ejecutando la animación de ataque, consume el doble de energía
+        actual_decay = self.hunger_decay_rate
+        if self.direction.length() > 0 or self.is_attacking:
+            actual_decay *= 2.0
+            
+        self.current_hunger -= actual_decay * dt
+        if self.current_hunger < 0:
+            self.current_hunger = 0
+
+        # 2. REGENERACIÓN PASIVA (Si la saciado a más del 80%)
+        if self.current_hunger >= self.max_hunger * 0.80 and self.current_health < self.max_health:
+            self.regen_timer += dt
+            if self.regen_timer >= 4.0:  # Cada 4 segundos cura 5 puntos de vida
+                self.current_health = min(self.max_health, self.current_health + 5)
+                self.regen_timer = 0.0
+                print(f"Regeneración por saciedad: {self.current_health}/{self.max_health}")
+        else:
+            self.regen_timer = 0.0
+
+        # 3. INANICIÓN (Si el hambre llegó a 0)
+        if self.current_hunger <= 0:
+            self.starve_timer += dt
+            if self.starve_timer >= 2.0:  # Cada 2 segundos pierde 5 puntos de vida
+                self.take_damage(5)
+                self.starve_timer = 0.0
+                print("¡Te estás muriendo de hambre! Busca comida.")
+        else:
+            self.starve_timer = 0.0

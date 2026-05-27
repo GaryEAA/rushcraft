@@ -2,11 +2,13 @@
   "player": {
     "name": "Jugador",
     "max_health": 100,
-    "speed": 300,
+    "speed": 200,
     "interaction_range": 80,
     "inventory_size": 12,
     "attack_range": 60,
-    "damage": 10
+    "damage": 10,
+    "max_hunger": 100,
+    "hunger_decay_rate": 1.5
   },
   "enemies": {
     "slime": {

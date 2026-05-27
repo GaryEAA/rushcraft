@@ -325,7 +325,9 @@ class WorldState(BaseState):
     
     def draw_player_health_hud(self, surface):
         """Dibuja la vida del jugador centrada justo arriba de la hotbar"""
-
+        # =================================================================
+        # BARRA DE VIDA (Columna Izquierda)
+        # =================================================================
         # CONFIGURACIÓN DE LOS CONTENEDORES
         vida_por_corazon = 10
         max_corazones = self.player.max_health // vida_por_corazon
@@ -361,16 +363,25 @@ class WorldState(BaseState):
             pygame.draw.rect(surface, color_borde, rect_corazon, 2)
 
         # =================================================================
-        # PROTOTIPO VISUAL: BARRA DE HAMBRE (Columna Derecha)
+        # BARRA DE HAMBRE (Columna Derecha)
         # =================================================================
         inicio_hambre_x = centro_pantalla_x + espacio_central
         color_hambre_lleno = (210, 105, 30)  # Color café/pan
         
-        for i in range(10):
+        # Traducir los puntos de hambre actuales a cuántos bloques de 10 puntos pintar
+        hambre_por_bloque = 10
+        max_bloques_hambre = self.player.max_hunger // hambre_por_bloque
+        bloques_hambre_llenos = int(self.player.current_hunger // hambre_por_bloque)
+
+        for i in range(max_bloques_hambre):
             x = inicio_hambre_x + i * (tamano_bloque + separacion)
             rect_hambre = pygame.Rect(x, inicio_y, tamano_bloque, tamano_bloque)
             
-            pygame.draw.rect(surface, color_hambre_lleno, rect_hambre)
+            # Si el índice actual es menor que los bloques llenos, se pinta de color café;
+            # de lo contrario, se queda con el color de contenedor vacío (gris)
+            color_actual_hambre = color_hambre_lleno if i < bloques_hambre_llenos else color_vacio
+            
+            pygame.draw.rect(surface, color_actual_hambre, rect_hambre)
             pygame.draw.rect(surface, color_borde, rect_hambre, 2)
         # =================================================================
         # GUÍA FUTURA: FILA 2 (Armadura y Sed)
