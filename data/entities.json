@@ -3,10 +3,10 @@
     "name": "Jugador",
     "max_health": 100,
     "speed": 200,
+    "hand_damage": 5,
     "interaction_range": 80,
     "inventory_size": 12,
     "attack_range": 60,
-    "damage": 10,
     "max_hunger": 100,
     "hunger_decay_rate": 1.5
   },
@@ -26,6 +26,22 @@
       "damage": 20,
       "color": [46, 139, 87],
       "exp_yield": 30
+    },
+    "skeleton": {
+      "name": "Arquero Esquelético",
+      "max_health": 40,
+      "speed": 75,
+      "damage": 15,
+      "color": [200, 200, 200],
+      "exp_yield": 40
+    },
+    "golem": {
+      "name": "Golem de Piedra",
+      "max_health": 150,
+      "speed": 30,
+      "damage": 35,
+      "color": [105, 105, 105],
+      "exp_yield": 100
     }
   },
   "npcs": {}

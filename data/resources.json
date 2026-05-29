@@ -1,0 +1,10 @@
+{
+  "resources": {
+    "tree": { "health": 30, "item_yield": "wood", "required_tool": "axe" },
+    "bush": { "health": 10, "item_yield": "berries", "required_tool": "hand" },
+    "cactus": { "health": 20, "item_yield": "fiber", "required_tool": "axe" },
+    "dead_shrub": { "health": 5, "item_yield": "wood", "required_tool": "hand" },
+    "pine_tree": { "health": 40, "item_yield": "wood", "required_tool": "axe" },
+    "ice_rock": { "health": 60, "item_yield": "ice", "required_tool": "pickaxe" }
+  }
+}

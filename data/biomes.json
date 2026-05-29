@@ -1,0 +1,29 @@
+{
+  "biomes": {
+    "forest": {
+      "color": [34, 139, 34],
+      "resources": ["tree", "bush"],
+      "enemies": ["slime", "zombie"]
+    },
+    "desert": {
+      "color": [238, 214, 175],
+      "resources": ["cactus", "dead_shrub"],
+      "enemies": ["zombie", "skeleton"]
+    },
+    "snow": {
+      "color": [240, 248, 255],
+      "resources": ["pine_tree", "ice_rock"],
+      "enemies": ["skeleton"]
+    },
+    "swamp": {
+      "color": [47, 79, 79],
+      "resources": ["dead_tree", "mud_patch"],
+      "enemies": ["slime", "zombie"]
+    },
+    "mountain": {
+      "color": [128, 128, 128],
+      "resources": ["iron_rock", "large_boulder"],
+      "enemies": ["golem"]
+    }
+  }
+}

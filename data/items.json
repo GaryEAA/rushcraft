@@ -1,9 +1,4 @@
 {
-    "hand_damage": 5,
-    "materials": {
-        "wood": { "multiplier": 1.0 },
-        "stone": { "multiplier": 1.8 }
-    },
     "tools": {
         "axe": {
             "base_damage": { "tree": 15, "rock": 2, "enemy": 10 }
