@@ -21,12 +21,17 @@ class WorldState(BaseState):
     def __init__(self, state_manager):
         super().__init__(state_manager)
         self.color_grass = (34, 139, 34)
-        
-        self.entities_data = self.load_entities_data()
-        self.items_data = self.load_items_data()
-        player_stats = self.entities_data["player"]
-        self.player = Player(400, 300, player_stats, self.items_data)
-        
+        # Obtenemos los datos desde el DataManager ya inyectado
+        data = self.manager.data_manager
+        # Definimos posición inicial
+        start_x = 600
+        start_y = 500
+        # 3. Extraemos las stats del JSON a través del DataManager
+        player_stats = data.entities.get("player")
+
+        # 4. Instanciamos el Player
+        self.player = Player(start_x, start_y, player_stats, self.manager)
+
         # Grupos de render y colisión
         self.visible_sprites = CameraGroup()
         self.resource_sprites = pygame.sprite.Group() 
@@ -56,7 +61,7 @@ class WorldState(BaseState):
         self.spawn_cooldown = 4.0  # Intentar spawnear un enemigo cada 4 segundos de noche
         self.max_enemies_allowed = 8
 
-        self.spawn_rules = self.load_spawn_rules()
+        self.spawn_rules = data.spawn_rules
 
     def load_spawn_rules(self):
         try:

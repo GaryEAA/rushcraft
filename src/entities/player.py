@@ -3,32 +3,31 @@ from src.entities.entity import Entity
 from src.managers.inventory_system import InventorySystem
 
 class Player(Entity):
-    def __init__(self, x, y, stats, items_data):
+    def __init__(self, x, y, stats, state_manager):
         """
         Instancia al jugador leyendo sus estadísticas iniciales.
-        Ahora el jugador inicia con las manos 100% vacías.
         """
-        super().__init__(x, y, stats["speed"], stats["max_health"])
+        speed = stats.get("speed")
+        max_health = stats.get("max_health")
+        super().__init__(x, y, speed, max_health)
         
-        # Definir una base cuadrada fija para evitar tirones en las esquinas
+        self.manager = state_manager
+        
+        self.item_data = self.manager.data_manager.items
+
+        # Definir una base cuadrada fija
         self.image = pygame.Surface((40, 40))
-
-        # Personalizar el color del cuadrado del jugador para diferenciarlo de un enemigo
-        self.image.fill((30, 144, 255)) # Azul brillante (Dodger Blue)
-
-        # Actualizamos el rect para que coincida con las nuevas dimensiones de la imagen
+        self.image.fill((30, 144, 255))
+        
         centro_inicial = self.rect.center
         self.rect = self.image.get_rect()
         self.rect.center = centro_inicial
         
-        # Inyectar el componente de inventario leyendo la capacidad desde el JSON
-        slots_capacity = stats.get("inventory_size", 36) # Valor por defecto de 36 slots si no se especifica
+        # Inyectar el componente de inventario
+        slots_capacity = stats.get("inventory_size", 36)
         self.inventory = InventorySystem(total_slots=slots_capacity)
-        self.active_slot = 0 # Guarda el índice del slot seleccionado (0 al 11)
+        self.active_slot = 0
         
-        # Guarda directamente los datos heredados sin leer el disco
-        self.item_data = items_data
-
         # Control de vida dinámico basado en las stats del JSON
         self.max_health = stats.get("max_health", 100)
         self.current_health = self.max_health
@@ -133,12 +132,15 @@ class Player(Entity):
         Calcula el daño proporcional cruzando el tipo de herramienta, 
         el recurso golpeado y el multiplicador del material desde el JSON.
         """
+
+        data = self.manager.data_manager
+
         # 1. Obtener los datos del slot que tenemos seleccionado en la mano
         active_item = self.inventory.slots[self.active_slot]
         
         # 2. Si la mano está vacía (None), devolvemos el daño base de puños desde el JSON
         if active_item is None:
-            return self.item_data.get("hand_damage", 2)
+            return data.entities.get("player", {}).get("hand_damage", 2)
             
         item_id = active_item["item_id"] # Ejemplos: "axe", "pickaxe", "stone_axe", "stone_pickaxe"
         

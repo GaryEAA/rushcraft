@@ -15,7 +15,7 @@ class Entity(pygame.sprite.Sprite):
         self.health = max_health
         
         # Gráficos provisionales (un rectángulo) hasta que carguemos los spritesheets
-        self.image = pygame.Surface((32, 48)) # Proporción estándar tipo Stardew Valley
+        self.image = pygame.Surface((32, 48)) # Proporción estándar
         self.image.fill((200, 200, 200))      # Gris por defecto
         self.rect = self.image.get_rect(topleft=self.pos)
 
