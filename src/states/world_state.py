@@ -365,22 +365,22 @@ class WorldState(BaseState):
             pygame.draw.line(surface, (100, 150, 100), (0, y), (surface.get_width(), y))
 
     def draw(self, surface):
-        # Calculamos el offset UNA SOLA VEZ aquí
+        # Actualizamos el offset (esto mueve la cámara suavemente)
         self.visible_sprites.update_offset(self.player)
-
-        # Guardamos en variables locales (esto bloquea el valor para este frame)
-        current_offset = self.visible_sprites.offset
-
-        # Dibujar base del mapa y terreno
+        
+        # Creamos el vector entero para el dibujo (esto evita el jittering)
+        draw_offset = pygame.math.Vector2(int(self.visible_sprites.offset.x), int(self.visible_sprites.offset.y))
+        
+        # Dibujar base del mapa
         surface.fill(self.color_grass)
-
-        # Dibujamos el grid pasando el offset fijo
-        self.draw_grid_debug(surface, current_offset.x, current_offset.y)
-
-        # Dibujar TODO lo que está en el grupo de cámara de forma automática
-        self.visible_sprites.draw(self.player)
-
-        # Filtro de iluminación solar / nocturna
+        
+        # Dibujar grid con los enteros
+        self.draw_grid_debug(surface, int(draw_offset.x), int(draw_offset.y))
+        
+        # Dibujar sprites pasando el offset ya calculado
+        self.visible_sprites.draw(self.player, draw_offset)
+        
+        # Dibujar filtro de noche por encima de TODO lo demás para oscurecer el mundo
         self.night_filter.draw(surface)
 
         # Obtenemos los datos de la fase directamente del reloj
