@@ -104,11 +104,12 @@ class WorldState(BaseState):
             self.visible_sprites.add(rock)
             self.resource_sprites.add(rock)
 
-    # Spawner dinámico condicionado por el ciclo
     def manage_enemy_spawning(self, dt):
         # 1. ¿Hay alguna regla activa para esta hora?
+        rules_list = self.spawn_rules.get("spawn_rules", [])
+        
         active_rules = [
-            rule for rule in self.spawn_rules 
+            rule for rule in rules_list 
             if rule["hours"][0] <= self.clock.hour < rule["hours"][1]
         ]
         
@@ -121,7 +122,7 @@ class WorldState(BaseState):
             for enemy in list(self.enemy_sprites):
                 self.particle_manager.create_hit_particles(enemy.rect.center, "tree")
                 if enemy.take_damage(15 * dt):
-                    print(f"El sol ha incinerado a un {enemy.name}.")
+                    print(f"El sol ha incinerado a un enemigo.")
             return
 
         # 3. Si hay reglas activas, spawneamos
@@ -140,7 +141,7 @@ class WorldState(BaseState):
 
     def spawn_enemy(self, mob_type):
         """Elige un enemigo según el tipo pasado por el JSON y lo spawnea."""
-        enemies_config = self.entities_data.get("enemies", {})
+        enemies_config = self.manager.data_manager.entities.get("enemies", {})
         stats = enemies_config.get(mob_type)
         
         if not stats:
@@ -184,7 +185,7 @@ class WorldState(BaseState):
                     self.player.inventory.add_item("wood", 100)
                     self.player.inventory.add_item("stone", 100)
                     self.player.inventory.add_item("apple", 5)
-                    self.player.inventory.add_item("meat", 5)
+                    self.player.inventory.add_item("cooked_meat", 5)
                     print("Debug: Recursos e ítems de comida inyectados correctamente.")
 
                 # Modo Survival: El mundo se conserva, el jugador reaparece en un punto aleatorio seguro
@@ -232,34 +233,30 @@ class WorldState(BaseState):
                             self.check_resource_interaction(event.pos)
 
                 # ==========================================
-                # CLIC DERECHO (Consumir / Usar comida desde la Hotbar)
+                # CLIC DERECHO (Consumir / Usar comida)
                 # ==========================================
                 elif event.button == 3:
                     if self.player.is_dead:
                         continue
                     
-                    # Solo se permite consumir ítems si no hay menús estorbando
                     if not self.crafting_menu.is_open and not self.inventory_screen.is_open:
                         active_slot = self.player.active_slot
                         inventory = self.player.inventory
-                        
-                        # Accedemos de forma directa al slot correspondiente de tu lista lógica
                         slot_data = inventory.slots[active_slot]
                         
                         if slot_data:
                             item_id = slot_data["item_id"]
-                            # Extraemos la sección limpia de comidas desde el nuevo items.json
-                            consumables_config = self.items_data.get("consumables", {})
                             
-                            # Enviamos los datos dinámicos al método interno del Player
-                            if self.player.consume_item(item_id, consumables_config):
-                                # Si lo ingiere con éxito, lo borramos usando tu método por índice
+                            # NUEVO CÓDIGO: Usamos el motor central del DataManager
+                            # El Player ya tiene el método consume_item actualizado
+                            if self.player.consume_item(item_id):
+                                # Si lo ingiere con éxito, lo borramos
                                 inventory.remove_item(active_slot, quantity=1)
 
     def check_resource_interaction(self, mouse_pos):
         """Verifica interacción con recursos considerando el offset de la cámara"""
-        # Le pregunta el rango directamente al objeto jugador
-        interaction_range = self.player.item_data.get("interaction_range", 80) if hasattr(self.player, 'item_data') else self.entities_data["player"].get("interaction_range", 80)
+        player_config = self.manager.data_manager.entities.get("player", {})
+        interaction_range = player_config.get("interaction_range", 80)
 
         world_mouse_x = mouse_pos[0] + self.visible_sprites.offset.x
         world_mouse_y = mouse_pos[1] + self.visible_sprites.offset.y
@@ -391,8 +388,7 @@ class WorldState(BaseState):
 
     def check_enemy_interaction(self, mouse_pos):
         """Verifica si el jugador hizo clic sobre un enemigo dentro de su rango de ataque"""
-        # LIMPIEZA: Lo mismo aquí, evitamos buscar la info en el State si el Player ya la tiene
-        attack_range = self.entities_data["player"].get("attack_range", 60)
+        attack_range = self.manager.data_manager.entities.get("player", {}).get("attack_range", 60)        
         
         world_mouse_x = mouse_pos[0] + self.visible_sprites.offset.x
         world_mouse_y = mouse_pos[1] + self.visible_sprites.offset.y

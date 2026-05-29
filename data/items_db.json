@@ -1,0 +1,17 @@
+{
+    "wood_axe": { "name": "Hacha de madera", "base_id": "axe_base", "material": "wood", "stackable": false },
+    "stone_axe": { "name": "Hacha de piedra", "base_id": "axe_base", "material": "stone", "stackable": false },
+    "iron_axe": { "name": "Hacha de hierro", "base_id": "axe_base", "material": "iron", "stackable": false },
+    
+    "wood_pickaxe": { "name": "Pico de madera", "base_id": "pickaxe_base", "material": "wood", "stackable": false },
+    "stone_pickaxe": { "name": "Pico de piedra", "base_id": "pickaxe_base", "material": "stone", "stackable": false },
+    "iron_pickaxe": { "name": "Pico de hierro", "base_id": "pickaxe_base", "material": "iron", "stackable": false },
+    
+    "wood_sword": { "name": "Espada de madera", "base_id": "sword_base", "material": "wood", "stackable": false },
+    "stone_sword": { "name": "Espada de piedra", "base_id": "sword_base", "material": "stone", "stackable": false },
+    "iron_sword": { "name": "Espada de hierro", "base_id": "sword_base", "material": "iron", "stackable": false },
+    
+    "apple": { "name": "Manzana", "base_id": "food_base", "material": "none", "stackable": true, "hunger": 20, "heal": 5, "message": "Crujiente" },
+    "cooked_meat": { "name": "Carne cocinada", "base_id": "food_base", "material": "none", "stackable": true, "hunger": 40, "heal": 15, "message": "Saciante" },
+    "berries": { "name": "Bayas", "base_id": "food_base", "material": "none", "stackable": true, "hunger": 10, "heal": 0, "message": "Bayas frescas" }
+}

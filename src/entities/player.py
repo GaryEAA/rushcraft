@@ -13,8 +13,6 @@ class Player(Entity):
         
         self.manager = state_manager
         
-        self.item_data = self.manager.data_manager.items
-
         # Definir una base cuadrada fija
         self.image = pygame.Surface((40, 40))
         self.image.fill((30, 144, 255))
@@ -127,50 +125,26 @@ class Player(Entity):
         # EJECUTAR METABOLISMO
         self.handle_metabolism(dt)
 
-    def get_current_tool_damage(self, resource_type):
+    def get_current_tool_damage(self, target_type):
         """
-        Calcula el daño proporcional cruzando el tipo de herramienta, 
-        el recurso golpeado y el multiplicador del material desde el JSON.
+        Calcula el daño usando el nuevo motor Data-Driven del DataManager.
         """
-
-        data = self.manager.data_manager
-
-        # 1. Obtener los datos del slot que tenemos seleccionado en la mano
-        active_item = self.inventory.slots[self.active_slot]
+        active_slot = self.inventory.slots[self.active_slot]
         
-        # 2. Si la mano está vacía (None), devolvemos el daño base de puños desde el JSON
-        if active_item is None:
-            return data.entities.get("player", {}).get("hand_damage", 2)
+        # Si la mano está vacía, usamos el comportamiento de la mano base
+        if active_slot is None:
+            stats = self.manager.data_manager.get_item_properties("hand_base")
+            return stats.get("base_damage", 2)
             
-        item_id = active_item["item_id"] # Ejemplos: "axe", "pickaxe", "stone_axe", "stone_pickaxe"
+        item_id = active_slot["item_id"]
         
-        # 3. IDENTIFICAR EL MATERIAL Y TIPO DE HERRAMIENTA
-        # Si es una herramienta básica inicial ("axe" o "pickaxe")
-        if item_id == "axe" or item_id == "pickaxe":
-            material = "wood"       # Las iniciales cuentan como madera por defecto
-            tool_type = item_id     # El tipo es directamente el ID completo
-        elif "_" in item_id:
-            # Si tiene un guion bajo (como "stone_axe"), separamos el material del tipo
-            material, tool_type = item_id.split("_", 1)
-        else:
-            # Si tiene cualquier otra cosa en la mano (como el recurso "wood" o "stone"), hace daño mínimo
-            return self.item_data.get("hand_damage", 2)
+        # Pasamos target_type al DataManager
+        stats = self.manager.data_manager.get_item_properties(item_id, target_type)
         
-        # 4. EXTRAER CONFIGURACIONES DEL DICCIONARIO JSON
-        materials_config = self.item_data.get("materials", {})
-        tools_config = self.item_data.get("tools", {})
-
-        # 5. MATEMÁTICA PROPORCIONAL: Si existen en el JSON, calculamos dinámicamente
-        if tool_type in tools_config and material in materials_config:
-            base_damage_dict = tools_config[tool_type].get("base_damage", {})
-            base_damage = base_damage_dict.get(resource_type, 1) # Por defecto 1 de daño si el recurso no califica
-            multiplier = materials_config[material].get("multiplier", 1.0)
-            
-            # Retorna el daño final entero: Daño Base * Multiplicador
-            return int(base_damage * multiplier)
-
-        # Si algo falla en la lectura, daño base de seguridad por defecto
-        return self.item_data.get("hand_damage", 2)
+        damage = stats.get("base_damage", 1)
+        
+        print(f"DEBUG: Ítem '{item_id}' utilizado. Daño aplicado: {damage}")
+        return damage
 
     def take_damage(self, amount):
         """Aplica daño al jugador si no es invulnerable y no está muerto"""
@@ -290,31 +264,30 @@ class Player(Entity):
         else:
             self.starve_timer = 0.0
 
-    def consume_item(self, item_id, consumables_config):
-        """Procesa el consumo de un ítem modificando las estadísticas del jugador de forma dinámica"""
+    def consume_item(self, item_id):
+        """
+        Procesa el consumo usando el DataManager centralizado.
+        """
+        # Obtenemos propiedades (esto funcionará para consumibles gracias a nuestra estructura)
+        props = self.manager.data_manager.get_item_properties(item_id)
         
-        # 1. Verificar si el ítem existe en la configuración cargada del JSON
-        if item_id not in consumables_config:
-            print(f"DEBUG: El ítem '{item_id}' no es algo que te puedas comer o no está en el JSON.")
+        if props.get("type") != "consumable":
+            print(f"DEBUG: El ítem '{item_id}' no es comestible.")
             return False
 
-        # 2. Si el jugador ya está completamente lleno de vida Y hambre, no malgastar comida
+        # Verificar si estamos llenos
         if self.current_hunger >= self.max_hunger and self.current_health >= self.max_health:
-            print("Ya estás completamente lleno, no te cabe un bocado más.")
+            print("Ya estás completamente lleno.")
             return False
-
-        # 3. Aplicar los efectos nutritivos leyendo las llaves correctas de tu JSON
-        item_effects = consumables_config[item_id]
         
-        # Extraemos los valores de restauración de hambre y salud, así como el mensaje personalizado para cada comida
-        hunger_gain = item_effects.get("hunger_restore", 0)
-        health_gain = item_effects.get("health_restore", 0)
-        message = item_effects.get("message", "Te has comido algo.")
+        # Aplicar efectos
+        hunger_gain = props.get("hunger", 0)
+        health_gain = props.get("heal", 0)
         
         self.current_hunger = min(self.max_hunger, self.current_hunger + hunger_gain)
         self.current_health = min(self.max_health, self.current_health + health_gain)
         
-        print(message)
+        print(props.get("message", "Te has comido algo."))
         print(f"Estado actual -> Hambre: {int(self.current_hunger)}/{self.max_hunger} | Vida: {self.current_health}/{self.max_health}")
         
         return True

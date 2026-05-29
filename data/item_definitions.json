@@ -1,0 +1,31 @@
+{
+    "axe_base": {
+        "type": "tool",
+        "base_damage": 10,
+        "base_durability": 100,
+        "effectiveness": { "tree": 2.0, "rock": 0.5, "enemy": 1.0 }
+    },
+    "pickaxe_base": {
+        "type": "tool",
+        "base_damage": 8,
+        "base_durability": 100,
+        "effectiveness": { "tree": 0.5, "rock": 2.0, "enemy": 1.0 }
+    },
+    "sword_base": {
+        "type": "tool",
+        "base_damage": 15,
+        "base_durability": 100,
+        "effectiveness": { "tree": 0.1, "rock": 0.1, "enemy": 2.0 }
+    },
+    "hand_base": {
+        "type": "tool",
+        "base_damage": 2,
+        "base_durability": 9999,
+        "effectiveness": { "tree": 1.0, "rock": 1.0, "enemy": 1.0 }
+    },
+    "food_base": {
+        "type": "consumable",
+        "hunger": 0,
+        "heal": 0
+    }
+}

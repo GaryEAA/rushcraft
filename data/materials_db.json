@@ -1,0 +1,18 @@
+{
+    "wood": {
+        "dmg_mod": 1.0,
+        "durability_mod": 0.5
+    },
+    "stone": {
+        "dmg_mod": 1.5,
+        "durability_mod": 1.0
+    },
+    "iron": {
+        "dmg_mod": 2.5,
+        "durability_mod": 2.0
+    },
+    "none": {
+        "dmg_mod": 1.0,
+        "durability_mod": 1.0
+    }
+}
