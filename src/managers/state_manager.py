@@ -1,10 +1,9 @@
 import pygame
 
 class StateManager:
-    def __init__(self):
-        # Diccionario maestro que guardará las instancias de los estados (Menu, World, etc.)
+    def __init__(self, data_manager):
+        self.data_manager = data_manager
         self.states = {}
-        # El estado que se está ejecutando actualmente en el Game Loop
         self.current_state = None
 
     def add_state(self, state_name, state_instance):

@@ -1,12 +1,15 @@
 import pygame
 import json
 import sys
-from src.core.state_manager import StateManager
+from src.managers.data_manager import DataManager
+from src.managers.state_manager import StateManager
 
 class Game:
     def __init__(self):
         pygame.init()
-        
+
+        self.data_manager = DataManager()
+
         # 1. Cargar configuraciones desde nuestra base de datos JSON
         self.settings = self.load_settings()
         
@@ -27,21 +30,15 @@ class Game:
         self.running = True
         
         # 4. Inicializar el Gestor de Estados del núcleo
-        self.state_manager = StateManager()
+        self.state_manager = StateManager(self.data_manager)
 
         # Importar y registrar el estado del Menú Principal
         from src.states.menu_state import MenuState
-        
-        # Instanciar el menú pasándole una referencia de este mismo manager
-        menu_state_instance = MenuState(self.state_manager)
-        
-        # Registrar el estado en la máquina con el identificador estandarizado "menu"
-        self.state_manager.add_state("menu", menu_state_instance)
+        self.state_manager.add_state("menu", MenuState(self.state_manager))
 
         # Importar, instanciar y registrar el estado del Mundo de Juego
         from src.states.world_state import WorldState
-        world_state_instance = WorldState(self.state_manager)
-        self.state_manager.add_state("world", world_state_instance)
+        self.state_manager.add_state("world", WorldState(self.state_manager))
         
         # Definir que el juego debe arrancar mostrando esta pantalla de inmediato
         self.state_manager.change_state("menu")
