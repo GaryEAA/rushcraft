@@ -22,7 +22,7 @@ class CameraGroup(pygame.sprite.Group):
         self.offset.x += (target_x - self.offset.x) * lerp_speed
         self.offset.y += (target_y - self.offset.y) * lerp_speed
 
-    def draw(self, player, draw_offset):
+    def draw(self, draw_offset):
         """Dibuja todo usando el draw_offset pasado desde fuera."""
         for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
             if hasattr(sprite, 'visual_scale_x'):

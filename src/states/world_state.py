@@ -3,7 +3,7 @@ import math
 import pygame
 import json
 import random
-from src.entities import enemy
+from src.core.world_generator import WorldGenerator
 from src.states.base_state import BaseState
 from src.entities.player import Player
 from src.entities.resources import Resource
@@ -64,6 +64,9 @@ class WorldState(BaseState):
         self.max_enemies_allowed = 8
 
         self.spawn_rules = data.spawn_rules
+
+        self.generated_chunks = set()
+        self.world_generator = WorldGenerator(seed=12345, grid_manager=self.grid_manager)
 
     def load_spawn_rules(self):
         try:
@@ -304,7 +307,7 @@ class WorldState(BaseState):
         # Bloquear movimiento del jugador si alguna interfaz está desplegada
         if not self.crafting_menu.is_open and not self.inventory_screen.is_open:
             self.player.update(dt, self.resource_sprites)
-
+            self.update_chunks()
             # Actualizar la IA y movimiento de todos los enemigos en pantalla.
             # Les pasamos los recursos como obstáculos y el rectángulo del jugador para que lo persigan.
             for enemy in self.enemy_sprites:
@@ -347,6 +350,19 @@ class WorldState(BaseState):
 
         self.drop_sprites.update(dt)
 
+    def update_chunks(self):
+        player_chunk = self.grid_manager.get_grid_coords(self.player.rect.center)
+        
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                chunk_pos = (player_chunk[0] + dx, player_chunk[1] + dy)
+                
+                if chunk_pos not in self.generated_chunks:
+                    # Pasamos self.visible_sprites aquí:
+                    self.world_generator.generate_chunk(chunk_pos[0], chunk_pos[1], self.visible_sprites)
+                    self.generated_chunks.add(chunk_pos)
+                    print(f"DEBUG: Generando recursos en chunk: {chunk_pos}")
+
     def draw_grid_debug(self, surface, offset_x, offset_y):
         cell_size = self.grid_manager.cell_size
         
@@ -378,7 +394,7 @@ class WorldState(BaseState):
         self.draw_grid_debug(surface, int(draw_offset.x), int(draw_offset.y))
         
         # Dibujar sprites pasando el offset ya calculado
-        self.visible_sprites.draw(self.player, draw_offset)
+        self.visible_sprites.draw(draw_offset)
         
         # Dibujar filtro de noche por encima de TODO lo demás para oscurecer el mundo
         self.night_filter.draw(surface)
@@ -427,6 +443,7 @@ class WorldState(BaseState):
             # Centrar los textos en la pantalla
             surface.blit(text_dead, (surface.get_width()//2 - text_dead.get_width()//2, surface.get_height()//2 - 50))
             surface.blit(text_retry, (surface.get_width()//2 - text_retry.get_width()//2, surface.get_height()//2 + 20))
+
 
     def check_enemy_interaction(self, mouse_pos):
         """Verifica si el jugador hizo clic sobre un enemigo dentro de su rango de ataque"""
