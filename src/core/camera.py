@@ -13,14 +13,15 @@ class CameraGroup(pygame.sprite.Group):
         self.half_width = self.display_surface.get_width() // 2
         self.half_height = self.display_surface.get_height() // 2
 
-    def custom_draw(self, player):
-        """Calcula el desfase respecto al jugador y dibuja todo con esa diferencia"""
-        
-        # 1. Calcular el centro de la cámara basado en la posición del jugador
-        self.offset.x = player.rect.centerx - self.half_width
-        self.offset.y = player.rect.centery - self.half_height
+    def update_offset(self, player):
+        self.offset.x = int(player.rect.centerx - self.half_width)
+        self.offset.y = int(player.rect.centery - self.half_height)
 
-        # 2. Dibujar todos los sprites aplicando el desfase matemático (Ordenados por profundidad Y)
+    def draw(self, player):
+        """Calcula el desfase respecto al jugador y dibuja todo con esa diferencia"""
+        # Actualizamos el offset usando el jugador
+        self.update_offset(player)
+        # Dibujar todos los sprites aplicando el desfase matemático (Ordenados por profundidad Y)
         for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
             # Si el sprite tiene animaciones de deformación por código
             if hasattr(sprite, 'visual_scale_x'):

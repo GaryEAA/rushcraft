@@ -16,11 +16,13 @@ from src.managers.recipe_manager import RecipeManager
 from src.ui.crafting_menu import CraftingMenu
 from src.ui.inventory_screen import InventoryScreen
 from src.entities.resources import Resource, ItemDrop
+from src.managers.grid_manager import GridManager
 
 class WorldState(BaseState):
     def __init__(self, state_manager):
         super().__init__(state_manager)
         self.color_grass = (34, 139, 34)
+        self.grid_manager = GridManager(cell_size=640)
         # Obtenemos los datos desde el DataManager ya inyectado
         data = self.manager.data_manager
         # Definimos posición inicial
@@ -90,17 +92,24 @@ class WorldState(BaseState):
 
     def generate_resources(self):
         """Distribuye árboles y rocas reales por el mapa de manera aleatoria"""
+        # PARA LOS ÁRBOLES
         for _ in range(10):
-            x = random.randint(0, 1200)
-            y = random.randint(0, 1000)
+            x, y = random.randint(0, 1200), random.randint(0, 1000)
             tree = Resource(x, y, resource_type="tree", health=30, item_yield="wood")
+            
+            self.grid_manager.add_resource(tree)
+            
             self.visible_sprites.add(tree)
             self.resource_sprites.add(tree)
             
+        # PARA LAS ROCAS
         for _ in range(5):
             x = random.randint(0, 1200)
             y = random.randint(0, 1000)
             rock = Resource(x, y, resource_type="rock", health=50, item_yield="stone")
+            
+            self.grid_manager.add_resource(rock) 
+            
             self.visible_sprites.add(rock)
             self.resource_sprites.add(rock)
 
@@ -255,15 +264,20 @@ class WorldState(BaseState):
 
     def check_resource_interaction(self, mouse_pos):
         """Verifica interacción con recursos considerando el offset de la cámara"""
+        # 1. Recuperar la configuración (¡Esto faltaba!)
         player_config = self.manager.data_manager.entities.get("player", {})
         interaction_range = player_config.get("interaction_range", 80)
 
+        # 2. Convertir coordenadas
         world_mouse_x = mouse_pos[0] + self.visible_sprites.offset.x
         world_mouse_y = mouse_pos[1] + self.visible_sprites.offset.y
-        world_mouse_pos = (world_mouse_x, world_mouse_y)
-        
-        for resource in self.resource_sprites:
-            if resource.rect.collidepoint(world_mouse_pos):
+        coords = self.grid_manager.get_grid_coords((world_mouse_x, world_mouse_y))
+
+        # 3. Buscar solo en el cuadrante del mouse
+        resources_to_check = self.grid_manager.get_resources_in_chunk(coords)
+
+        for resource in resources_to_check:            
+            if resource.rect.collidepoint((world_mouse_x, world_mouse_y)):
                 player_center = pygame.math.Vector2(self.player.rect.center)
                 resource_center = pygame.math.Vector2(resource.rect.center)
                 distance = player_center.distance_to(resource_center)
@@ -333,10 +347,38 @@ class WorldState(BaseState):
 
         self.drop_sprites.update(dt)
 
+    def draw_grid_debug(self, surface, offset_x, offset_y):
+        cell_size = self.grid_manager.cell_size
+        
+        # Calcular rango visible
+        start_col = int(offset_x // cell_size)
+        end_col = int((offset_x + surface.get_width()) // cell_size) + 1
+        start_row = int(offset_y // cell_size)
+        end_row = int((offset_y + surface.get_height()) // cell_size) + 1
+
+        for col in range(start_col, end_col + 1):
+            x = int((col * cell_size) - offset_x)
+            pygame.draw.line(surface, (100, 150, 100), (x, 0), (x, surface.get_height()))
+
+        for row in range(start_row, end_row + 1):
+            y = int((row * cell_size) - offset_y)
+            pygame.draw.line(surface, (100, 150, 100), (0, y), (surface.get_width(), y))
+
     def draw(self, surface):
+        # Calculamos el offset UNA SOLA VEZ aquí
+        self.visible_sprites.update_offset(self.player)
+
+        # Guardamos en variables locales (esto bloquea el valor para este frame)
+        current_offset = self.visible_sprites.offset
+
         # Dibujar base del mapa y terreno
         surface.fill(self.color_grass)
-        self.visible_sprites.custom_draw(self.player)
+
+        # Dibujamos el grid pasando el offset fijo
+        self.draw_grid_debug(surface, current_offset.x, current_offset.y)
+
+        # Dibujar TODO lo que está en el grupo de cámara de forma automática
+        self.visible_sprites.draw(self.player)
 
         # Filtro de iluminación solar / nocturna
         self.night_filter.draw(surface)
