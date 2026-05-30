@@ -22,7 +22,7 @@ class InventorySystem:
         else:
             return 36  # Hotbar (12) + 2 Hileras de mochila (24)
         
-    def add_item(self, item_id, quantity=1, max_stack=64):
+    def add_item(self, item_id, quantity=1, max_stack=99):
         """
         Intenta añadir un ítem al inventario gestionando el stacking automático
         y respetando los límites de slots desbloqueados por la mochila.

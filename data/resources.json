@@ -1,10 +1,334 @@
 {
   "resources": {
-    "tree": { "health": 30, "item_yield": "wood", "required_tool": "axe" },
-    "bush": { "health": 10, "item_yield": "berries", "required_tool": "hand" },
-    "cactus": { "health": 20, "item_yield": "fiber", "required_tool": "axe" },
-    "dead_shrub": { "health": 5, "item_yield": "wood", "required_tool": "hand" },
-    "pine_tree": { "health": 40, "item_yield": "wood", "required_tool": "axe" },
-    "ice_rock": { "health": 60, "item_yield": "ice", "required_tool": "pickaxe" }
+    "tree": {
+      "display_name": "Árbol",
+      "health": 30,
+      "item_yield": "wood",
+      "drop_amount": [
+        4,
+        8
+      ],
+      "required_tool": "axe",
+      "min_tool_tier": 0,
+      "color": [
+        101,
+        67,
+        33
+      ],
+      "hitbox": [
+        18,
+        18
+      ],
+      "is_solid": true,
+      "rarity": "common"
+    },
+    "dead_tree": {
+      "display_name": "Árbol Muerto",
+      "health": 15,
+      "item_yield": "wood",
+      "drop_amount": [
+        2,
+        4
+      ],
+      "required_tool": "axe",
+      "min_tool_tier": 0,
+      "color": [
+        80,
+        50,
+        20
+      ],
+      "hitbox": [
+        14,
+        14
+      ],
+      "is_solid": true,
+      "rarity": "common"
+    },
+    "pine_tree": {
+      "display_name": "Pino",
+      "health": 40,
+      "item_yield": "wood",
+      "drop_amount": [
+        5,
+        10
+      ],
+      "required_tool": "axe",
+      "min_tool_tier": 0,
+      "color": [
+        0,
+        90,
+        0
+      ],
+      "hitbox": [
+        16,
+        16
+      ],
+      "is_solid": true,
+      "rarity": "common"
+    },
+    "bush": {
+      "display_name": "Arbusto",
+      "health": 8,
+      "item_yield": "berries",
+      "drop_amount": [
+        2,
+        5
+      ],
+      "required_tool": "hand",
+      "min_tool_tier": 0,
+      "color": [
+        106,
+        190,
+        48
+      ],
+      "hitbox": [
+        28,
+        20
+      ],
+      "is_solid": false,
+      "rarity": "common"
+    },
+    "cactus": {
+      "display_name": "Cactus",
+      "health": 20,
+      "item_yield": "fiber",
+      "drop_amount": [
+        2,
+        4
+      ],
+      "required_tool": "axe",
+      "min_tool_tier": 0,
+      "color": [
+        85,
+        140,
+        50
+      ],
+      "hitbox": [
+        20,
+        20
+      ],
+      "is_solid": true,
+      "rarity": "common"
+    },
+    "dead_shrub": {
+      "display_name": "Arbusto Seco",
+      "health": 5,
+      "item_yield": "fiber",
+      "drop_amount": [
+        1,
+        3
+      ],
+      "required_tool": "hand",
+      "min_tool_tier": 0,
+      "color": [
+        160,
+        120,
+        60
+      ],
+      "hitbox": [
+        22,
+        16
+      ],
+      "is_solid": false,
+      "rarity": "common"
+    },
+    "mud_patch": {
+      "display_name": "Barro",
+      "health": 6,
+      "item_yield": "clay",
+      "drop_amount": [
+        2,
+        5
+      ],
+      "required_tool": "hand",
+      "min_tool_tier": 0,
+      "color": [
+        90,
+        60,
+        30
+      ],
+      "hitbox": [
+        30,
+        22
+      ],
+      "is_solid": false,
+      "rarity": "common"
+    },
+    "rock": {
+      "display_name": "Roca",
+      "health": 40,
+      "item_yield": "stone",
+      "drop_amount": [
+        3,
+        6
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 0,
+      "color": [
+        120,
+        120,
+        120
+      ],
+      "hitbox": [
+        30,
+        30
+      ],
+      "is_solid": true,
+      "rarity": "common"
+    },
+    "large_boulder": {
+      "display_name": "Peñasco",
+      "health": 80,
+      "item_yield": "stone",
+      "drop_amount": [
+        8,
+        15
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 1,
+      "color": [
+        90,
+        90,
+        90
+      ],
+      "hitbox": [
+        36,
+        36
+      ],
+      "is_solid": true,
+      "rarity": "uncommon"
+    },
+    "ice_rock": {
+      "display_name": "Roca de Hielo",
+      "health": 50,
+      "item_yield": "ice",
+      "drop_amount": [
+        3,
+        6
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 1,
+      "color": [
+        180,
+        220,
+        240
+      ],
+      "hitbox": [
+        30,
+        30
+      ],
+      "is_solid": true,
+      "rarity": "uncommon"
+    },
+    "ore_coal": {
+      "display_name": "Veta de Carbón",
+      "health": 50,
+      "item_yield": "coal",
+      "drop_amount": [
+        3,
+        6
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 0,
+      "color": [
+        40,
+        40,
+        40
+      ],
+      "hitbox": [
+        28,
+        28
+      ],
+      "is_solid": true,
+      "rarity": "common"
+    },
+    "ore_copper": {
+      "display_name": "Veta de Cobre",
+      "health": 55,
+      "item_yield": "copper_ore",
+      "drop_amount": [
+        2,
+        4
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 0,
+      "color": [
+        184,
+        115,
+        51
+      ],
+      "hitbox": [
+        28,
+        28
+      ],
+      "is_solid": true,
+      "rarity": "common"
+    },
+    "ore_iron": {
+      "display_name": "Veta de Hierro",
+      "health": 70,
+      "item_yield": "iron_ore",
+      "drop_amount": [
+        2,
+        4
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 1,
+      "color": [
+        150,
+        120,
+        90
+      ],
+      "hitbox": [
+        28,
+        28
+      ],
+      "is_solid": true,
+      "rarity": "uncommon"
+    },
+    "ore_gold": {
+      "display_name": "Veta de Oro",
+      "health": 90,
+      "item_yield": "gold_ore",
+      "drop_amount": [
+        1,
+        3
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 2,
+      "color": [
+        218,
+        165,
+        32
+      ],
+      "hitbox": [
+        28,
+        28
+      ],
+      "is_solid": true,
+      "rarity": "rare"
+    },
+    "ore_crystal": {
+      "display_name": "Cristal Arcano",
+      "health": 100,
+      "item_yield": "crystal",
+      "drop_amount": [
+        1,
+        2
+      ],
+      "required_tool": "pickaxe",
+      "min_tool_tier": 2,
+      "color": [
+        140,
+        80,
+        200
+      ],
+      "hitbox": [
+        26,
+        26
+      ],
+      "is_solid": true,
+      "rarity": "rare"
+    }
   }
 }

@@ -25,21 +25,22 @@ class Entity(pygame.sprite.Sprite):
 
     def move(self, dt, obstacle_sprites):
         """Mueve la entidad y resuelve colisiones en ejes separados (X e Y)"""
-        # Normalizar el vector para evitar que camine más rápido en diagonal
         if self.direction.length() > 0:
             self.direction = self.direction.normalize()
-            
+
         # --- EJE HORIZONTAL ---
         self.pos.x += self.direction.x * self.speed * dt
         self.hitbox.x = round(self.pos.x)
         self.rect.centerx = self.hitbox.centerx
         self.check_collisions("horizontal", obstacle_sprites)
-        
+        self.pos.x = self.hitbox.x
+
         # --- EJE VERTICAL ---
         self.pos.y += self.direction.y * self.speed * dt
         self.hitbox.y = round(self.pos.y)
-        self.rect.bottom = self.hitbox.bottom # Vincula la base visual con la base física
+        self.rect.bottom = self.hitbox.bottom
         self.check_collisions("vertical", obstacle_sprites)
+        self.pos.y = self.hitbox.y
 
     def check_collisions(self, direction, obstacle_sprites):
         """Detecta la intersección de hitboxes y frena el avance en seco"""
@@ -50,17 +51,17 @@ class Entity(pygame.sprite.Sprite):
             
             if self.hitbox.colliderect(obstacle_box):
                 if direction == "horizontal":
-                    if self.direction.x > 0: # Caminando a la derecha
+                    if self.direction.x > 0:
                         self.hitbox.right = obstacle_box.left
-                    if self.direction.x < 0: # Caminando a la izquierda
+                    if self.direction.x < 0:
                         self.hitbox.left = obstacle_box.right
                     self.pos.x = self.hitbox.x
                     self.rect.centerx = self.hitbox.centerx
                     
                 if direction == "vertical":
-                    if self.direction.y > 0: # Caminando hacia abajo
+                    if self.direction.y > 0:
                         self.hitbox.bottom = obstacle_box.top
-                    if self.direction.y < 0: # Caminando hacia arriba
+                    if self.direction.y < 0:
                         self.hitbox.top = obstacle_box.bottom
                     self.pos.y = self.hitbox.y
                     self.rect.bottom = self.hitbox.bottom

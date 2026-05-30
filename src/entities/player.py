@@ -125,6 +125,15 @@ class Player(Entity):
         # EJECUTAR METABOLISMO
         self.handle_metabolism(dt)
 
+    def get_current_tool_tier(self):
+        """Devuelve el tier del material de la herramienta equipada (0 = mano/madera)."""
+        active_slot = self.inventory.slots[self.active_slot]
+        if active_slot is None:
+            return 0
+        item_id = active_slot["item_id"]
+        props = self.manager.data_manager.get_item_properties(item_id)
+        return props.get("material_tier", 0)
+ 
     def get_current_tool_damage(self, target_type):
         """
         Calcula el daño usando el nuevo motor Data-Driven del DataManager.

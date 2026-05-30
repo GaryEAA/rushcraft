@@ -1,18 +1,46 @@
 {
+  "materials": {
     "wood": {
-        "dmg_mod": 1.0,
-        "durability_mod": 0.5
+      "display_name": "Madera",
+      "tier": 0,
+      "dmg_mod": 1,
+      "durability_mod": 0.5
     },
     "stone": {
-        "dmg_mod": 1.5,
-        "durability_mod": 1.0
+      "display_name": "Piedra",
+      "tier": 1,
+      "dmg_mod": 1.5,
+      "durability_mod": 1
+    },
+    "copper": {
+      "display_name": "Cobre",
+      "tier": 1,
+      "dmg_mod": 1.8,
+      "durability_mod": 1.2
     },
     "iron": {
-        "dmg_mod": 2.5,
-        "durability_mod": 2.0
+      "display_name": "Hierro",
+      "tier": 2,
+      "dmg_mod": 2.5,
+      "durability_mod": 2
+    },
+    "gold": {
+      "display_name": "Oro",
+      "tier": 3,
+      "dmg_mod": 2,
+      "durability_mod": 1.5
+    },
+    "crystal": {
+      "display_name": "Cristal",
+      "tier": 4,
+      "dmg_mod": 4,
+      "durability_mod": 3
     },
     "none": {
-        "dmg_mod": 1.0,
-        "durability_mod": 1.0
+      "display_name": "Sin material",
+      "tier": 0,
+      "dmg_mod": 1,
+      "durability_mod": 1
     }
+  }
 }

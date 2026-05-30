@@ -1,17 +1,197 @@
 {
-    "wood_axe": { "name": "Hacha de madera", "base_id": "axe_base", "material": "wood", "stackable": false },
-    "stone_axe": { "name": "Hacha de piedra", "base_id": "axe_base", "material": "stone", "stackable": false },
-    "iron_axe": { "name": "Hacha de hierro", "base_id": "axe_base", "material": "iron", "stackable": false },
-    
-    "wood_pickaxe": { "name": "Pico de madera", "base_id": "pickaxe_base", "material": "wood", "stackable": false },
-    "stone_pickaxe": { "name": "Pico de piedra", "base_id": "pickaxe_base", "material": "stone", "stackable": false },
-    "iron_pickaxe": { "name": "Pico de hierro", "base_id": "pickaxe_base", "material": "iron", "stackable": false },
-    
-    "wood_sword": { "name": "Espada de madera", "base_id": "sword_base", "material": "wood", "stackable": false },
-    "stone_sword": { "name": "Espada de piedra", "base_id": "sword_base", "material": "stone", "stackable": false },
-    "iron_sword": { "name": "Espada de hierro", "base_id": "sword_base", "material": "iron", "stackable": false },
-    
-    "apple": { "name": "Manzana", "base_id": "food_base", "material": "none", "stackable": true, "hunger": 20, "heal": 5, "message": "Crujiente" },
-    "cooked_meat": { "name": "Carne cocinada", "base_id": "food_base", "material": "none", "stackable": true, "hunger": 40, "heal": 15, "message": "Saciante" },
-    "berries": { "name": "Bayas", "base_id": "food_base", "material": "none", "stackable": true, "hunger": 10, "heal": 0, "message": "Bayas frescas" }
+  "tools": {
+    "wood_axe": {
+      "name": "Hacha de Madera",
+      "base_id": "axe_base",
+      "material": "wood",
+      "stackable": false
+    },
+    "stone_axe": {
+      "name": "Hacha de Piedra",
+      "base_id": "axe_base",
+      "material": "stone",
+      "stackable": false
+    },
+    "copper_axe": {
+      "name": "Hacha de Cobre",
+      "base_id": "axe_base",
+      "material": "copper",
+      "stackable": false
+    },
+    "iron_axe": {
+      "name": "Hacha de Hierro",
+      "base_id": "axe_base",
+      "material": "iron",
+      "stackable": false
+    },
+    "wood_pickaxe": {
+      "name": "Pico de Madera",
+      "base_id": "pickaxe_base",
+      "material": "wood",
+      "stackable": false
+    },
+    "stone_pickaxe": {
+      "name": "Pico de Piedra",
+      "base_id": "pickaxe_base",
+      "material": "stone",
+      "stackable": false
+    },
+    "copper_pickaxe": {
+      "name": "Pico de Cobre",
+      "base_id": "pickaxe_base",
+      "material": "copper",
+      "stackable": false
+    },
+    "iron_pickaxe": {
+      "name": "Pico de Hierro",
+      "base_id": "pickaxe_base",
+      "material": "iron",
+      "stackable": false
+    },
+    "wood_sword": {
+      "name": "Espada de Madera",
+      "base_id": "sword_base",
+      "material": "wood",
+      "stackable": false
+    },
+    "stone_sword": {
+      "name": "Espada de Piedra",
+      "base_id": "sword_base",
+      "material": "stone",
+      "stackable": false
+    },
+    "copper_sword": {
+      "name": "Espada de Cobre",
+      "base_id": "sword_base",
+      "material": "copper",
+      "stackable": false
+    },
+    "iron_sword": {
+      "name": "Espada de Hierro",
+      "base_id": "sword_base",
+      "material": "iron",
+      "stackable": false
+    }
+  },
+  "raw_materials": {
+    "wood": {
+      "name": "Madera",
+      "stackable": true,
+      "max_stack": 99
+    },
+    "stone": {
+      "name": "Piedra",
+      "stackable": true,
+      "max_stack": 99
+    },
+    "fiber": {
+      "name": "Fibra",
+      "stackable": true,
+      "max_stack": 99
+    },
+    "clay": {
+      "name": "Arcilla",
+      "stackable": true,
+      "max_stack": 99
+    },
+    "ice": {
+      "name": "Hielo",
+      "stackable": true,
+      "max_stack": 50
+    },
+    "coal": {
+      "name": "Carbón",
+      "stackable": true,
+      "max_stack": 99
+    },
+    "copper_ore": {
+      "name": "Mineral de Cobre",
+      "stackable": true,
+      "max_stack": 99
+    },
+    "iron_ore": {
+      "name": "Mineral de Hierro",
+      "stackable": true,
+      "max_stack": 99
+    },
+    "gold_ore": {
+      "name": "Mineral de Oro",
+      "stackable": true,
+      "max_stack": 50
+    },
+    "crystal": {
+      "name": "Cristal Arcano",
+      "stackable": true,
+      "max_stack": 20
+    },
+    "copper_bar": {
+      "name": "Lingote de Cobre",
+      "stackable": true,
+      "max_stack": 50
+    },
+    "iron_bar": {
+      "name": "Lingote de Hierro",
+      "stackable": true,
+      "max_stack": 50
+    },
+    "gold_bar": {
+      "name": "Lingote de Oro",
+      "stackable": true,
+      "max_stack": 20
+    }
+  },
+  "food": {
+    "berries": {
+      "name": "Bayas",
+      "stackable": true,
+      "max_stack": 20,
+      "hunger": 10,
+      "heal": 0,
+      "message": "Frescas pero ácidas"
+    },
+    "apple": {
+      "name": "Manzana",
+      "stackable": true,
+      "max_stack": 20,
+      "hunger": 20,
+      "heal": 5,
+      "message": "¡Crujiente!"
+    },
+    "cooked_meat": {
+      "name": "Carne Asada",
+      "stackable": true,
+      "max_stack": 10,
+      "hunger": 40,
+      "heal": 15,
+      "message": "¡Saciante!"
+    },
+    "raw_meat": {
+      "name": "Carne Cruda",
+      "stackable": true,
+      "max_stack": 10,
+      "hunger": 10,
+      "heal": -5,
+      "message": "Mejor cocinarla..."
+    },
+    "mushroom": {
+      "name": "Champiñón",
+      "stackable": true,
+      "max_stack": 15,
+      "hunger": 15,
+      "heal": 2,
+      "message": "Terroso"
+    }
+  },
+  "equipment": {
+    "backpack_leather": {
+      "name": "Mochila de Montañero",
+      "stackable": false,
+      "extra_slots": 12
+    },
+    "backpack_expedition": {
+      "name": "Mochila de Expedición",
+      "stackable": false,
+      "extra_slots": 24
+    }
+  }
 }

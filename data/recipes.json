@@ -1,34 +1,189 @@
 {
-    "recipes": {
-        "axe": {
-            "name": "Hacha de Madera",
-            "ingredients": {"wood": 10},
-            "result": {"item_id": "wood_axe", "quantity": 1}
-        },
-        "pickaxe": {
-            "name": "Pico de Madera",
-            "ingredients": {"wood": 10},
-            "result": {"item_id": "wood_pickaxe", "quantity": 1}
-        },
-        "stone_axe": {
-            "name": "Hacha de Piedra",
-            "ingredients": {"wood": 30, "stone": 10},
-            "result": {"item_id": "stone_axe", "quantity": 1}
-        },
-                "stone_pickaxe": {
-            "name": "Pico de Piedra",
-            "ingredients": {"wood": 20, "stone": 15},
-            "result": {"item_id": "stone_pickaxe", "quantity": 1}
-        },
-        "backpack_leather": {
-            "name": "Mochila de Montañero (+12 Slots)",
-            "ingredients": {"wood": 30, "stone": 15},
-            "result": {"item_id": "backpack_leather", "quantity": 1}
-        },
-        "backpack_expedition": {
-            "name": "Mochila de Expedición (+24 Slots)",
-            "ingredients": {"wood": 50, "stone": 40},
-            "result": {"item_id": "backpack_expedition", "quantity": 1}
-        }
+  "recipes": {
+    "wood_axe": {
+      "name": "Hacha de Madera",
+      "ingredients": {
+        "wood": 10
+      },
+      "result": {
+        "item_id": "wood_axe",
+        "quantity": 1
+      }
+    },
+    "stone_axe": {
+      "name": "Hacha de Piedra",
+      "ingredients": {
+        "wood": 8,
+        "stone": 12
+      },
+      "result": {
+        "item_id": "stone_axe",
+        "quantity": 1
+      }
+    },
+    "copper_axe": {
+      "name": "Hacha de Cobre",
+      "ingredients": {
+        "wood": 8,
+        "copper_bar": 6
+      },
+      "result": {
+        "item_id": "copper_axe",
+        "quantity": 1
+      }
+    },
+    "iron_axe": {
+      "name": "Hacha de Hierro",
+      "ingredients": {
+        "wood": 8,
+        "iron_bar": 6
+      },
+      "result": {
+        "item_id": "iron_axe",
+        "quantity": 1
+      }
+    },
+    "wood_pickaxe": {
+      "name": "Pico de Madera",
+      "ingredients": {
+        "wood": 10
+      },
+      "result": {
+        "item_id": "wood_pickaxe",
+        "quantity": 1
+      }
+    },
+    "stone_pickaxe": {
+      "name": "Pico de Piedra",
+      "ingredients": {
+        "wood": 8,
+        "stone": 15
+      },
+      "result": {
+        "item_id": "stone_pickaxe",
+        "quantity": 1
+      }
+    },
+    "copper_pickaxe": {
+      "name": "Pico de Cobre",
+      "ingredients": {
+        "wood": 8,
+        "copper_bar": 6
+      },
+      "result": {
+        "item_id": "copper_pickaxe",
+        "quantity": 1
+      }
+    },
+    "iron_pickaxe": {
+      "name": "Pico de Hierro",
+      "ingredients": {
+        "wood": 8,
+        "iron_bar": 6
+      },
+      "result": {
+        "item_id": "iron_pickaxe",
+        "quantity": 1
+      }
+    },
+    "wood_sword": {
+      "name": "Espada de Madera",
+      "ingredients": {
+        "wood": 12
+      },
+      "result": {
+        "item_id": "wood_sword",
+        "quantity": 1
+      }
+    },
+    "stone_sword": {
+      "name": "Espada de Piedra",
+      "ingredients": {
+        "wood": 6,
+        "stone": 15
+      },
+      "result": {
+        "item_id": "stone_sword",
+        "quantity": 1
+      }
+    },
+    "copper_sword": {
+      "name": "Espada de Cobre",
+      "ingredients": {
+        "wood": 6,
+        "copper_bar": 8
+      },
+      "result": {
+        "item_id": "copper_sword",
+        "quantity": 1
+      }
+    },
+    "iron_sword": {
+      "name": "Espada de Hierro",
+      "ingredients": {
+        "wood": 6,
+        "iron_bar": 8
+      },
+      "result": {
+        "item_id": "iron_sword",
+        "quantity": 1
+      }
+    },
+    "copper_bar": {
+      "name": "Lingote de Cobre",
+      "ingredients": {
+        "copper_ore": 3,
+        "coal": 1
+      },
+      "result": {
+        "item_id": "copper_bar",
+        "quantity": 1
+      }
+    },
+    "iron_bar": {
+      "name": "Lingote de Hierro",
+      "ingredients": {
+        "iron_ore": 3,
+        "coal": 2
+      },
+      "result": {
+        "item_id": "iron_bar",
+        "quantity": 1
+      }
+    },
+    "gold_bar": {
+      "name": "Lingote de Oro",
+      "ingredients": {
+        "gold_ore": 3,
+        "coal": 3
+      },
+      "result": {
+        "item_id": "gold_bar",
+        "quantity": 1
+      }
+    },
+    "backpack_leather": {
+      "name": "Mochila de Montañero (+12)",
+      "ingredients": {
+        "fiber": 20,
+        "wood": 10
+      },
+      "result": {
+        "item_id": "backpack_leather",
+        "quantity": 1
+      }
+    },
+    "backpack_expedition": {
+      "name": "Mochila de Expedición (+24)",
+      "ingredients": {
+        "fiber": 40,
+        "iron_bar": 6,
+        "wood": 15
+      },
+      "result": {
+        "item_id": "backpack_expedition",
+        "quantity": 1
+      }
     }
+  }
 }

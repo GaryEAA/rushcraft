@@ -1,31 +1,99 @@
 {
-    "axe_base": {
-        "type": "tool",
-        "base_damage": 10,
-        "base_durability": 100,
-        "effectiveness": { "tree": 2.0, "rock": 0.5, "enemy": 1.0 }
-    },
-    "pickaxe_base": {
-        "type": "tool",
-        "base_damage": 8,
-        "base_durability": 100,
-        "effectiveness": { "tree": 0.5, "rock": 2.0, "enemy": 1.0 }
-    },
-    "sword_base": {
-        "type": "tool",
-        "base_damage": 15,
-        "base_durability": 100,
-        "effectiveness": { "tree": 0.1, "rock": 0.1, "enemy": 2.0 }
-    },
-    "hand_base": {
-        "type": "tool",
-        "base_damage": 2,
-        "base_durability": 9999,
-        "effectiveness": { "tree": 1.0, "rock": 1.0, "enemy": 1.0 }
-    },
-    "food_base": {
-        "type": "consumable",
-        "hunger": 0,
-        "heal": 0
+  "axe_base": {
+    "type": "tool",
+    "base_damage": 10,
+    "base_durability": 100,
+    "effectiveness": {
+      "tree": 2,
+      "dead_tree": 2,
+      "pine_tree": 2,
+      "bush": 1.5,
+      "dead_shrub": 1.5,
+      "cactus": 2,
+      "rock": 0.3,
+      "large_boulder": 0.2,
+      "ice_rock": 0.2,
+      "ore_coal": 0.2,
+      "ore_copper": 0.2,
+      "ore_iron": 0.1,
+      "ore_gold": 0.1,
+      "ore_crystal": 0.1,
+      "mud_patch": 0.5,
+      "enemy": 1
     }
+  },
+  "pickaxe_base": {
+    "type": "tool",
+    "base_damage": 8,
+    "base_durability": 100,
+    "effectiveness": {
+      "tree": 0.3,
+      "dead_tree": 0.3,
+      "pine_tree": 0.3,
+      "bush": 0.5,
+      "dead_shrub": 0.5,
+      "cactus": 0.3,
+      "rock": 2,
+      "large_boulder": 2,
+      "ice_rock": 2,
+      "ore_coal": 2,
+      "ore_copper": 2,
+      "ore_iron": 2,
+      "ore_gold": 2,
+      "ore_crystal": 2,
+      "mud_patch": 0.5,
+      "enemy": 0.8
+    }
+  },
+  "sword_base": {
+    "type": "tool",
+    "base_damage": 15,
+    "base_durability": 100,
+    "effectiveness": {
+      "tree": 0.1,
+      "dead_tree": 0.1,
+      "pine_tree": 0.1,
+      "bush": 0.5,
+      "dead_shrub": 0.5,
+      "cactus": 0.1,
+      "rock": 0.1,
+      "large_boulder": 0.05,
+      "ice_rock": 0.1,
+      "ore_coal": 0.1,
+      "ore_copper": 0.1,
+      "ore_iron": 0.05,
+      "ore_gold": 0.05,
+      "ore_crystal": 0.05,
+      "mud_patch": 0.3,
+      "enemy": 2
+    }
+  },
+  "hand_base": {
+    "type": "tool",
+    "base_damage": 2,
+    "base_durability": 9999,
+    "effectiveness": {
+      "tree": 0.5,
+      "dead_tree": 0.5,
+      "pine_tree": 0.5,
+      "bush": 2,
+      "dead_shrub": 2,
+      "cactus": 0.5,
+      "rock": 0.3,
+      "large_boulder": 0.1,
+      "ice_rock": 0.2,
+      "ore_coal": 0.2,
+      "ore_copper": 0.1,
+      "ore_iron": 0.05,
+      "ore_gold": 0.05,
+      "ore_crystal": 0.05,
+      "mud_patch": 2,
+      "enemy": 0.5
+    }
+  },
+  "food_base": {
+    "type": "consumable",
+    "hunger": 0,
+    "heal": 0
+  }
 }

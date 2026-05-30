@@ -66,7 +66,12 @@ class WorldState(BaseState):
         self.spawn_rules = data.spawn_rules
 
         self.generated_chunks = set()
-        self.world_generator = WorldGenerator(seed=12345, grid_manager=self.grid_manager)
+        self.world_generator = WorldGenerator(
+            seed = 12345, 
+            grid_manager = self.grid_manager,
+            biomes_data = data.biomes,
+            resources_data = data.resources
+        )
 
     def load_spawn_rules(self):
         try:
@@ -95,24 +100,26 @@ class WorldState(BaseState):
 
     def generate_resources(self):
         """Distribuye árboles y rocas reales por el mapa de manera aleatoria"""
+        # Obtenemos la base de datos de recursos desde el DataManager
+        resources_db = self.manager.data_manager.resources.get("resources", {})
+        
         # PARA LOS ÁRBOLES
+        tree_config = resources_db.get("tree", {})
         for _ in range(10):
             x, y = random.randint(0, 1200), random.randint(0, 1000)
-            tree = Resource(x, y, resource_type="tree", health=30, item_yield="wood")
+            tree = Resource(x, y, "tree", tree_config) 
             
             self.grid_manager.add_resource(tree)
-            
             self.visible_sprites.add(tree)
             self.resource_sprites.add(tree)
             
         # PARA LAS ROCAS
+        rock_config = resources_db.get("rock", {})
         for _ in range(5):
-            x = random.randint(0, 1200)
-            y = random.randint(0, 1000)
-            rock = Resource(x, y, resource_type="rock", health=50, item_yield="stone")
+            x, y = random.randint(0, 1200), random.randint(0, 1000)
+            rock = Resource(x, y, "rock", rock_config)
             
             self.grid_manager.add_resource(rock) 
-            
             self.visible_sprites.add(rock)
             self.resource_sprites.add(rock)
 
@@ -148,7 +155,6 @@ class WorldState(BaseState):
                 self.spawn_enemy(random.choice(rule["mobs"]))
 
     def cooldown_or_spawn_time(self):
-        # Retorna el cooldown base (se puede modificar según la hora exacta para dar más dificultad)
         return self.spawn_cooldown
 
     def spawn_enemy(self, mob_type):
@@ -194,8 +200,12 @@ class WorldState(BaseState):
                 # TODO: (DEBUG) Presiona 'I' para inyectar recursos masivos
                 if event.key == pygame.K_i:
                     # Añadimos 100 de madera y 100 de piedra de golpe
-                    self.player.inventory.add_item("wood", 100)
-                    self.player.inventory.add_item("stone", 100)
+                    self.player.inventory.add_item("wood", 50)
+                    self.player.inventory.add_item("stone", 50)
+                    self.player.inventory.add_item("coal", 30)
+                    self.player.inventory.add_item("copper_ore", 20)
+                    self.player.inventory.add_item("iron_ore", 10)
+                    self.player.inventory.add_item("fiber", 20)
                     self.player.inventory.add_item("apple", 5)
                     self.player.inventory.add_item("cooked_meat", 5)
                     print("Debug: Recursos e ítems de comida inyectados correctamente.")
@@ -287,66 +297,74 @@ class WorldState(BaseState):
                 
                 if distance <= interaction_range:
                     dynamic_damage = self.player.get_current_tool_damage(resource.type)
-                    print(f"Clic detectado en {resource.type}. Daño: {dynamic_damage}")
-                    
+                    tool_tier = self.player.get_current_tool_tier()
+                    print(f"Clic en '{resource.type}'. Daño: {dynamic_damage} | Tier herramienta: {tool_tier}")
+
                     self.particle_manager.create_hit_particles(resource.rect.center, resource.type)
                     resource.hit(
-                        damage = dynamic_damage, 
-                        drop_groups = [self.visible_sprites, self.drop_sprites]
+                        damage     = dynamic_damage,
+                        drop_groups= [self.visible_sprites, self.drop_sprites],
+                        tool_tier  = tool_tier
                     )
                     self.player.trigger_attack_animation()
                     break
                 
     def update(self, dt):
+        # 1. Actualización de sistemas de tiempo y efectos
         self.clock.update(dt)
         self.night_filter.update(self.clock.hour, self.clock.minute)
         
-        # Ejecutar el gestor del ciclo y spawneo de enemigos constantemente
+        # 2. Gestor del ciclo y spawneo de enemigos
         self.manage_enemy_spawning(dt)
 
-        # Bloquear movimiento del jugador si alguna interfaz está desplegada
+        # 3. Lógica de juego activa (Solo si no hay menús abiertos)
         if not self.crafting_menu.is_open and not self.inventory_screen.is_open:
-            self.player.update(dt, self.resource_sprites)
+            
+            # --- FILTRADO DE OBSTÁCULOS (CAPAS DE COLISIÓN) ---
+            # Filtramos solo los recursos que tienen 'is_solid: true' en el JSON
+            solid_obstacles = [res for res in self.resource_sprites if res.is_solid]
+            
+            # Actualizamos jugador pasando solo los sólidos
+            self.player.update(dt, solid_obstacles)
+            
+            # Actualizamos generación de chunks
             self.update_chunks()
-            # Actualizar la IA y movimiento de todos los enemigos en pantalla.
-            # Les pasamos los recursos como obstáculos y el rectángulo del jugador para que lo persigan.
-            for enemy in self.enemy_sprites:
-                enemy.update(dt, self.resource_sprites, self.player.rect)
 
-            # Detectar si algún enemigo está tocando físicamente al jugador
+            # Actualizamos enemigos pasando solo los sólidos
+            for enemy in self.enemy_sprites:
+                enemy.update(dt, solid_obstacles, self.player.rect)
+
+            # 4. Colisiones Jugador-Enemigo
             collided_enemies = pygame.sprite.spritecollide(self.player, self.enemy_sprites, False)
             for enemy in collided_enemies:
                 if self.player.take_damage(enemy.damage):
                     self.particle_manager.create_hit_particles(self.player.rect.center, "rock")
                     
-                    # Si este golpe mató al jugador, tiramos su inventario al suelo
+                    # Lógica de muerte: tirar inventario
                     if self.player.is_dead:
                         items_to_drop = self.player.drop_all_items()
-                        
-                        # Spawneamos cada ítem en el suelo
                         for item in items_to_drop:
-                            offset_x = random.randint(-20, 20)
-                            offset_y = random.randint(-20, 20)
-                            
-                            # Clase ItemDrop recibe: pos (tupla), groups (los grupos de Pygame)
+                            offset_x, offset_y = random.randint(-20, 20), random.randint(-20, 20)
                             drop_pos = (self.player.rect.centerx + offset_x, self.player.rect.centery + offset_y)
                             
-                            # Al pasarle los grupos aquí, se añade automáticamente a render y lógica
                             ItemDrop(
                                 drop_pos, 
                                 [self.visible_sprites, self.drop_sprites], 
                                 item["item_id"], 
                                 item["amount"]
                             )
-        self.particle_manager.update(dt)
 
+        # 5. Actualización de partículas y drops (fuera del 'if' para que se vean aunque el menú esté abierto)
+        self.particle_manager.update(dt)
+        
         # Lógica de recolección (Pickup)
         if not self.player.is_dead:
             collided_drops = pygame.sprite.spritecollide(self.player, self.drop_sprites, False)
             for drop in collided_drops:
-                if self.player.inventory.add_item(drop.item_id, drop.amount):
+                max_stack = self.manager.data_manager.get_max_stack(drop.item_id)
+                if self.player.inventory.add_item(drop.item_id, drop.amount, max_stack=max_stack):
                     drop.kill()
-                    print(f"Recogido: {drop.amount} de {drop.item_id}")
+                    print(f"Recogido: {drop.amount}x {drop.item_id}")
 
         self.drop_sprites.update(dt)
 
@@ -358,8 +376,7 @@ class WorldState(BaseState):
                 chunk_pos = (player_chunk[0] + dx, player_chunk[1] + dy)
                 
                 if chunk_pos not in self.generated_chunks:
-                    # Pasamos self.visible_sprites aquí:
-                    self.world_generator.generate_chunk(chunk_pos[0], chunk_pos[1], self.visible_sprites)
+                    self.world_generator.generate_chunk(chunk_pos[0], chunk_pos[1], self.visible_sprites, self.resource_sprites)
                     self.generated_chunks.add(chunk_pos)
                     print(f"DEBUG: Generando recursos en chunk: {chunk_pos}")
 
@@ -476,10 +493,8 @@ class WorldState(BaseState):
         # =================================================================
         # BARRA DE VIDA (Columna Izquierda)
         # =================================================================
-        # CONFIGURACIÓN DE LOS CONTENEDORES
         vida_por_corazon = 10
         max_corazones = self.player.max_health // vida_por_corazon
-        # Evitamos que con 99.9 de vida se vacíe un corazón entero de golpe
         corazones_llenos = math.ceil(self.player.current_health / vida_por_corazon)        
         tamano_bloque = 14  
         separacion = 4
@@ -503,10 +518,8 @@ class WorldState(BaseState):
         for i in range(max_corazones):
             x = inicio_x + i * (tamano_bloque + separacion)
             y = inicio_y
-            
             rect_corazon = pygame.Rect(x, y, tamano_bloque, tamano_bloque)
-            color_actual = color_lleno if i < corazones_llenos else color_vacio
-                
+            color_actual = color_lleno if i < corazones_llenos else color_vacio    
             pygame.draw.rect(surface, color_actual, rect_corazon)
             pygame.draw.rect(surface, color_borde, rect_corazon, 2)
 
@@ -515,21 +528,14 @@ class WorldState(BaseState):
         # =================================================================
         inicio_hambre_x = centro_pantalla_x + espacio_central
         color_hambre_lleno = (210, 105, 30)  # Color café/pan
-        
-        # Traducir los puntos de hambre actuales a cuántos bloques de 10 puntos pintar
         hambre_por_bloque = 10
         max_bloques_hambre = self.player.max_hunger // hambre_por_bloque
-        # Si tienes 99.9, se divide entre 10 (= 9.99) y math.ceil lo sube a 10 bloques pintados.
         bloques_hambre_llenos = math.ceil(self.player.current_hunger / hambre_por_bloque)
 
         for i in range(max_bloques_hambre):
             x = inicio_hambre_x + i * (tamano_bloque + separacion)
             rect_hambre = pygame.Rect(x, inicio_y, tamano_bloque, tamano_bloque)
-            
-            # Si el índice actual es menor que los bloques llenos, se pinta de color café;
-            # de lo contrario, se queda con el color de contenedor vacío (gris)
             color_actual_hambre = color_hambre_lleno if i < bloques_hambre_llenos else color_vacio
-            
             pygame.draw.rect(surface, color_actual_hambre, rect_hambre)
             pygame.draw.rect(surface, color_borde, rect_hambre, 2)
         # =================================================================
