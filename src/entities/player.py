@@ -1,7 +1,7 @@
 import pygame
 from src.entities.entity import Entity
 from src.managers.inventory_system import InventorySystem
-
+ 
 class Player(Entity):
     def __init__(self, x, y, stats, state_manager):
         """
@@ -13,13 +13,10 @@ class Player(Entity):
         
         self.manager = state_manager
         
-        # Definir una base cuadrada fija
-        self.image = pygame.Surface((40, 40))
-        self.image.fill((30, 144, 255))
-        
-        centro_inicial = self.rect.center
-        self.rect = self.image.get_rect()
-        self.rect.center = centro_inicial
+        # Imagen del player = tamaño de su hitbox (28x28 de Entity)
+        # Sin sobrantes: lo que ves es la zona de colisión exacta
+        self.image = pygame.Surface((self.HITBOX_W, self.HITBOX_H))
+        self.image.fill((30, 144, 255))   # azul placeholder hasta tener sprites
         
         # Inyectar el componente de inventario
         slots_capacity = stats.get("inventory_size", 36)
@@ -38,14 +35,14 @@ class Player(Entity):
         # Temporizadores internos para los procesos metabólicos
         self.regen_timer = 0.0
         self.starve_timer = 0.0
-
+ 
         # Temporizadores para evitar daño masivo continuo
         self.invulnerable_timer = 0.0
         self.invulnerable_duration = 0.5 # Medio segundo de inmunidad tras ser golpeado
-
+ 
         # Estado de vida del jugador
         self.is_dead = False
-
+ 
         # Control de orientación visual
         self.facing_direction = "down" # Puede ser: "up", "down", "left", "right"
         
@@ -55,7 +52,7 @@ class Player(Entity):
         self.attack_timer = 0.0
         self.visual_scale_x = 1.0
         self.visual_scale_y = 1.0
-
+ 
     def input(self):
         """Escucha el teclado y altera la dirección del vector de movimiento"""
         keys = pygame.key.get_pressed()
@@ -63,7 +60,7 @@ class Player(Entity):
         # Resetear dirección en cada frame
         self.direction.x = 0
         self.direction.y = 0
-
+ 
         # TODO: MOVIMIENTO CON TECLAS WASD O FLECHAS
         # Movimiento en Eje Y y actualización de orientación
         if keys[pygame.K_w] or keys[pygame.K_UP]:
@@ -80,17 +77,17 @@ class Player(Entity):
         elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.direction.x = 1
             self.facing_direction = "right"
-
+ 
         # TODO: SELECCIÓN DE LA HOTBAR
         # Teclas del 1 al 9 (Índices 0 al 8)
         for i in range(9):
             if keys[pygame.K_1 + i]:
                 self.active_slot = i
-
+ 
         # Tecla 0 (Slot 10, Índice 9)
         if keys[pygame.K_0]:
             self.active_slot = 9
-
+ 
         # Tecla "," (Slot 11, Índice 10)
         if keys[pygame.K_COMMA]:
             self.active_slot = 10
@@ -98,7 +95,7 @@ class Player(Entity):
         # Tecla "." (Slot 12, Índice 11)
         if keys[pygame.K_PERIOD]:
             self.active_slot = 11
-
+ 
     def update(self, dt, obstacle_sprites):
         """Actualización frame a frame del jugador con conocimiento de obstáculos"""
         # Si el jugador está muerto, no procesa movimiento ni inputs
@@ -108,11 +105,11 @@ class Player(Entity):
         self.input()
         # Le pasamos los obstáculos al método move de la clase madre (Entity)
         self.move(dt, obstacle_sprites)
-
+ 
         # Reducir el tiempo de invulnerabilidad frame a frame
         if self.invulnerable_timer > 0:
             self.invulnerable_timer -= dt
-
+ 
         # Controlar la animación de ataque
         if self.is_attacking:
             self.attack_timer -= dt
@@ -121,10 +118,10 @@ class Player(Entity):
                 # Regresa a su tamaño original (cuadrado perfecto)
                 self.visual_scale_x = 1.0
                 self.visual_scale_y = 1.0
-
+ 
         # EJECUTAR METABOLISMO
         self.handle_metabolism(dt)
-
+ 
     def get_current_tool_tier(self):
         """Devuelve el tier del material de la herramienta equipada (0 = mano/madera)."""
         active_slot = self.inventory.slots[self.active_slot]
@@ -154,7 +151,7 @@ class Player(Entity):
         
         print(f"DEBUG: Ítem '{item_id}' utilizado. Daño aplicado: {damage}")
         return damage
-
+ 
     def take_damage(self, amount):
         """Aplica daño al jugador si no es invulnerable y no está muerto"""
         if self.is_dead:
@@ -172,7 +169,7 @@ class Player(Entity):
                 print(f"¡Jugador golpeado! Vida restante: {self.current_health}/{self.max_health}")
             return True
         return False
-
+ 
     # Para cuando el jugador presione la tecla de revivir
     def reset(self, start_x, start_y):
         """Restablece los valores del jugador para una nueva partida"""
@@ -191,7 +188,7 @@ class Player(Entity):
             
         self.direction.x = 0
         self.direction.y = 0
-
+ 
     def drop_all_items(self):
         """Vacía el inventario del jugador y devuelve los ítems para spawnearlos en el suelo"""
         dropped_items = []
@@ -224,7 +221,7 @@ class Player(Entity):
             else:
                 self.visual_scale_x = 0.7
                 self.visual_scale_y = 1.4  # Se estira hacia arriba/abajo
-
+ 
     def draw_custom(self, surface, camera_offset):
         """Dibuja al jugador aplicando el efecto de estiramiento por código"""
         # 1. Calculamos el nuevo tamaño de la superficie basado en la animación
@@ -240,7 +237,7 @@ class Player(Entity):
         
         # 4. Lo dibujamos en la pantalla del juego
         surface.blit(scaled_image, scaled_rect)
-
+ 
     def handle_metabolism(self, dt):
         """Gestiona el consumo de comida, curación por saciedad y daño por hambre"""
         # 1. GASTO DINÁMICO DE HAMBRE
@@ -252,7 +249,7 @@ class Player(Entity):
         self.current_hunger -= actual_decay * dt
         if self.current_hunger < 0:
             self.current_hunger = 0
-
+ 
         # 2. REGENERACIÓN PASIVA (Si la saciado a más del 80%)
         if self.current_hunger >= self.max_hunger * 0.80 and self.current_health < self.max_health:
             self.regen_timer += dt
@@ -262,7 +259,7 @@ class Player(Entity):
                 print(f"Regeneración por saciedad: {self.current_health}/{self.max_health}")
         else:
             self.regen_timer = 0.0
-
+ 
         # 3. INANICIÓN (Si el hambre llegó a 0)
         if self.current_hunger <= 0:
             self.starve_timer += dt
@@ -272,7 +269,7 @@ class Player(Entity):
                 print("¡Te estás muriendo de hambre! Busca comida.")
         else:
             self.starve_timer = 0.0
-
+ 
     def consume_item(self, item_id):
         """
         Procesa el consumo usando el DataManager centralizado.
@@ -283,7 +280,7 @@ class Player(Entity):
         if props.get("type") != "consumable":
             print(f"DEBUG: El ítem '{item_id}' no es comestible.")
             return False
-
+ 
         # Verificar si estamos llenos
         if self.current_hunger >= self.max_hunger and self.current_health >= self.max_health:
             print("Ya estás completamente lleno.")

@@ -1,36 +1,32 @@
 import pygame
 import math
-
+ 
+ 
 class ItemDrop(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, item_id, amount):
+    """
+    Ítem dropeado en el suelo. Flota con seno.
+    Color leído de drop_color en items_db.json (via data_manager) — sin JSON separado.
+    """
+ 
+    def __init__(self, pos, groups, item_id, amount, data_manager=None):
         super().__init__(groups)
         self.item_id = item_id
-        self.amount = amount
-        
-        # Aspecto visual (un cuadradito pequeño representativo)
-        self.image = pygame.Surface((16, 16))
-        
-        # 1. DICCIONARIO DE COLORES ASOCIADOS A CADA ÍTEM
-        colores_items = {
-            "wood": (150, 75, 0),       # Marrón madera
-            "stone": (120, 120, 120),   # Gris roca
-            "apple": (230, 30, 30),     # Rojo manzana
-            "meat": (255, 105, 180)     # Rosado carne
-        }
-        
-        # 2. Si el item_id no existe en el diccionario, 
-        # usa el color Magenta (255, 0, 255) como alerta visual de error.
-        color = colores_items.get(self.item_id, (255, 0, 255))
+        self.amount  = amount
+ 
+        # Buscar drop_color directamente en el ítem; magenta si falta (alerta visual)
+        color = (255, 0, 255)
+        if data_manager is not None:
+            item = data_manager.get_item(item_id)
+            if item and "drop_color" in item:
+                color = tuple(item["drop_color"])
+ 
+        self.image = pygame.Surface((14, 14))
         self.image.fill(color)
-        
-        self.rect = self.image.get_rect(center = pos)
-        
-        # Para el efecto de "flotar" (animación)
-        self.pos = pygame.math.Vector2(pos)
-        self.offset = 0
-        self.start_time = pygame.time.get_ticks()
-
+        pygame.draw.rect(self.image, (255, 255, 255), self.image.get_rect(), 1)
+ 
+        self.rect = self.image.get_rect(center=pos)
+        self.pos  = pygame.math.Vector2(pos)
+ 
     def update(self, dt):
-        # Efecto de levitación usando la función Seno
-        self.offset = math.sin(pygame.time.get_ticks() * 0.005) * 5
-        self.rect.centery = self.pos.y + self.offset
+        self.rect.centery = int(self.pos.y + math.sin(pygame.time.get_ticks() * 0.004) * 4)
+ 

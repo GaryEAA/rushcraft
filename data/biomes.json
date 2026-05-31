@@ -4,7 +4,7 @@
       "display_name": "Bosque",
       "color": [
         34,
-        139,
+        110,
         34
       ],
       "resources": [
@@ -29,6 +29,7 @@
           "weight": 2
         }
       ],
+      "tile_density": 0.08,
       "cluster_count": [
         2,
         4
@@ -40,7 +41,29 @@
       "enemies": [
         "slime",
         "zombie"
-      ]
+      ],
+      "visual": {
+        "color": [
+          34,
+          110,
+          34
+        ],
+        "tile_dark": [
+          24,
+          90,
+          24
+        ],
+        "border": [
+          10,
+          60,
+          10
+        ]
+      },
+      "spawn_config": {
+        "spawn_rate": 8,
+        "max_mobs": 6,
+        "night_only": true
+      }
     },
     "desert": {
       "display_name": "Desierto",
@@ -71,6 +94,7 @@
           "weight": 3
         }
       ],
+      "tile_density": 0.05,
       "cluster_count": [
         1,
         3
@@ -82,7 +106,29 @@
       "enemies": [
         "zombie",
         "skeleton"
-      ]
+      ],
+      "visual": {
+        "color": [
+          194,
+          164,
+          90
+        ],
+        "tile_dark": [
+          174,
+          144,
+          70
+        ],
+        "border": [
+          140,
+          108,
+          40
+        ]
+      },
+      "spawn_config": {
+        "spawn_rate": 10,
+        "max_mobs": 5,
+        "night_only": true
+      }
     },
     "snow": {
       "display_name": "Tundra",
@@ -113,6 +159,7 @@
           "weight": 8
         }
       ],
+      "tile_density": 0.07,
       "cluster_count": [
         2,
         4
@@ -123,7 +170,29 @@
       ],
       "enemies": [
         "skeleton"
-      ]
+      ],
+      "visual": {
+        "color": [
+          210,
+          230,
+          245
+        ],
+        "tile_dark": [
+          185,
+          205,
+          220
+        ],
+        "border": [
+          155,
+          175,
+          200
+        ]
+      },
+      "spawn_config": {
+        "spawn_rate": 12,
+        "max_mobs": 4,
+        "night_only": true
+      }
     },
     "swamp": {
       "display_name": "Pantano",
@@ -154,6 +223,7 @@
           "weight": 5
         }
       ],
+      "tile_density": 0.1,
       "cluster_count": [
         2,
         4
@@ -165,7 +235,29 @@
       "enemies": [
         "slime",
         "zombie"
-      ]
+      ],
+      "visual": {
+        "color": [
+          55,
+          80,
+          55
+        ],
+        "tile_dark": [
+          38,
+          60,
+          38
+        ],
+        "border": [
+          18,
+          40,
+          18
+        ]
+      },
+      "spawn_config": {
+        "spawn_rate": 7,
+        "max_mobs": 7,
+        "night_only": true
+      }
     },
     "mountain": {
       "display_name": "Montaña",
@@ -200,6 +292,7 @@
           "weight": 10
         }
       ],
+      "tile_density": 0.09,
       "cluster_count": [
         1,
         3
@@ -210,7 +303,29 @@
       ],
       "enemies": [
         "golem"
-      ]
+      ],
+      "visual": {
+        "color": [
+          95,
+          90,
+          88
+        ],
+        "tile_dark": [
+          72,
+          68,
+          66
+        ],
+        "border": [
+          48,
+          46,
+          44
+        ]
+      },
+      "spawn_config": {
+        "spawn_rate": 14,
+        "max_mobs": 3,
+        "night_only": true
+      }
     }
   }
 }

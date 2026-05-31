@@ -108,7 +108,8 @@
         20
       ],
       "is_solid": true,
-      "rarity": "common"
+      "rarity": "common",
+      "contact_damage": 5
     },
     "dead_shrub": {
       "display_name": "Arbusto Seco",

@@ -5,13 +5,18 @@ class DataManager:
     def __init__(self, data_path="data"):
         self.data_path = data_path
  
-        self.entities      = self.load("entities.json")
-        self.spawn_rules   = self.load("spawn_rules.json")
-        self.resources     = self.load("resources.json")
-        self.biomes        = self.load("biomes.json")
-        self.items_db      = self.load("items_db.json")
-        self.item_defs     = self.load("item_definitions.json")
-        self.materials     = self.load("materials_db.json")
+        self.entities     = self.load("entities.json")
+        self.resources    = self.load("resources.json")
+        self.biomes       = self.load("biomes.json")   # incluye visual y spawn_config por bioma
+        self.items_db     = self.load("items_db.json")
+        self.item_defs    = self.load("item_definitions.json")
+        self.materials    = self.load("materials_db.json")
+ 
+        # Acceso rápido: biome_id → datos visuales (leídos desde biomes.json["biomes"][id]["visual"])
+        self.biome_visual = {
+            biome_id: biome_data.get("visual", {})
+            for biome_id, biome_data in self.biomes.get("biomes", {}).items()
+        }
  
         self._items_flat = {}
         for category_items in self.items_db.values():

@@ -77,67 +77,132 @@
     "wood": {
       "name": "Madera",
       "stackable": true,
-      "max_stack": 99
+      "max_stack": 99,
+      "drop_color": [
+        150,
+        75,
+        0
+      ]
     },
     "stone": {
       "name": "Piedra",
       "stackable": true,
-      "max_stack": 99
+      "max_stack": 99,
+      "drop_color": [
+        130,
+        130,
+        130
+      ]
     },
     "fiber": {
       "name": "Fibra",
       "stackable": true,
-      "max_stack": 99
+      "max_stack": 99,
+      "drop_color": [
+        180,
+        160,
+        60
+      ]
     },
     "clay": {
       "name": "Arcilla",
       "stackable": true,
-      "max_stack": 99
+      "max_stack": 99,
+      "drop_color": [
+        160,
+        110,
+        60
+      ]
     },
     "ice": {
       "name": "Hielo",
       "stackable": true,
-      "max_stack": 50
+      "max_stack": 50,
+      "drop_color": [
+        190,
+        220,
+        245
+      ]
     },
     "coal": {
       "name": "Carbón",
       "stackable": true,
-      "max_stack": 99
+      "max_stack": 99,
+      "drop_color": [
+        30,
+        30,
+        30
+      ]
     },
     "copper_ore": {
       "name": "Mineral de Cobre",
       "stackable": true,
-      "max_stack": 99
+      "max_stack": 99,
+      "drop_color": [
+        184,
+        115,
+        51
+      ]
     },
     "iron_ore": {
       "name": "Mineral de Hierro",
       "stackable": true,
-      "max_stack": 99
+      "max_stack": 99,
+      "drop_color": [
+        150,
+        120,
+        90
+      ]
     },
     "gold_ore": {
       "name": "Mineral de Oro",
       "stackable": true,
-      "max_stack": 50
+      "max_stack": 50,
+      "drop_color": [
+        218,
+        165,
+        32
+      ]
     },
     "crystal": {
       "name": "Cristal Arcano",
       "stackable": true,
-      "max_stack": 20
+      "max_stack": 20,
+      "drop_color": [
+        140,
+        80,
+        200
+      ]
     },
     "copper_bar": {
       "name": "Lingote de Cobre",
       "stackable": true,
-      "max_stack": 50
+      "max_stack": 50,
+      "drop_color": [
+        210,
+        140,
+        60
+      ]
     },
     "iron_bar": {
       "name": "Lingote de Hierro",
       "stackable": true,
-      "max_stack": 50
+      "max_stack": 50,
+      "drop_color": [
+        170,
+        160,
+        155
+      ]
     },
     "gold_bar": {
       "name": "Lingote de Oro",
       "stackable": true,
-      "max_stack": 20
+      "max_stack": 20,
+      "drop_color": [
+        255,
+        215,
+        0
+      ]
     }
   },
   "food": {
@@ -147,7 +212,12 @@
       "max_stack": 20,
       "hunger": 10,
       "heal": 0,
-      "message": "Frescas pero ácidas"
+      "message": "Frescas pero ácidas",
+      "drop_color": [
+        180,
+        30,
+        80
+      ]
     },
     "apple": {
       "name": "Manzana",
@@ -155,7 +225,12 @@
       "max_stack": 20,
       "hunger": 20,
       "heal": 5,
-      "message": "¡Crujiente!"
+      "message": "¡Crujiente!",
+      "drop_color": [
+        220,
+        30,
+        30
+      ]
     },
     "cooked_meat": {
       "name": "Carne Asada",
@@ -163,7 +238,12 @@
       "max_stack": 10,
       "hunger": 40,
       "heal": 15,
-      "message": "¡Saciante!"
+      "message": "¡Saciante!",
+      "drop_color": [
+        160,
+        80,
+        20
+      ]
     },
     "raw_meat": {
       "name": "Carne Cruda",
@@ -171,7 +251,12 @@
       "max_stack": 10,
       "hunger": 10,
       "heal": -5,
-      "message": "Mejor cocinarla..."
+      "message": "Mejor cocinarla...",
+      "drop_color": [
+        220,
+        130,
+        100
+      ]
     },
     "mushroom": {
       "name": "Champiñón",
@@ -179,7 +264,12 @@
       "max_stack": 15,
       "hunger": 15,
       "heal": 2,
-      "message": "Terroso"
+      "message": "Terroso",
+      "drop_color": [
+        180,
+        100,
+        40
+      ]
     }
   },
   "equipment": {
